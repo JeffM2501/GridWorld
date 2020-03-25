@@ -148,6 +148,21 @@ namespace GridWorld
             return new ClusterPos((int)vec.X - Origin.X, (int)vec.Y - Origin.Y);
         }
 
+        public Vector3 GetBlockRelativePostion(int index)
+        {
+            int z = index % (XYSize * XYSize);
+            int planeStart = index - (z * (XYSize * XYSize));
+            int y = planeStart % XYSize;
+            int x = index - (y * XYSize);
+
+            return new Vector3(x, y, z);
+        }
+
+        public Vector3 GetBlockRelativePostion(Block block)
+        {
+            return GetBlockRelativePostion(Array.IndexOf(Blocks, block));
+        }
+
         public static int XYSize = 32;
         public static int ZSize = 32;
 

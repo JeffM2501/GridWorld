@@ -15,6 +15,8 @@ namespace GridWorld.Test
         public Scene RootScene = null;
         public static Node CameraNode = null;
 
+        GridWorld.World Map = new World();
+
 
         protected override void Start()
         {
@@ -40,14 +42,14 @@ namespace GridWorld.Test
             RootScene.CreateComponent<DebugRenderer>();
 
 
-            var node = RootScene.CreateChild("test");
-            var model = node.CreateComponent<StaticModel>();
-            model.Model = Urho.CoreAssets.Models.Box;
-            model.Material = Urho.CoreAssets.Materials.DefaultGrey;
-
-            node.Position = new Vector3(0, 10, 0);
-            node.Rotation = new Quaternion(0, 45, 0);
-            node.Scale = new Vector3(10, 10, 10);
+//             var node = RootScene.CreateChild("test");
+//             var model = node.CreateComponent<StaticModel>();
+//             model.Model = Urho.CoreAssets.Models.Box;
+//             model.Material = Urho.CoreAssets.Materials.DefaultGrey;
+// 
+//             node.Position = new Vector3(0, 10, 0);
+//             node.Rotation = new Quaternion(0, 45, 0);
+//             node.Scale = new Vector3(10, 10, 10);
 
             string skyboxName = "hills.xml";
             if (skyboxName != string.Empty && ResourceCache.GetMaterial("skyboxes/" + skyboxName, false) != null)
@@ -58,6 +60,37 @@ namespace GridWorld.Test
             }
 
             SetupDisplay();
+
+            new WorldBuilder.FlatBuilder().Build(string.Empty, null, Map);
+
+            foreach (var cluster in Map.Clusters)
+            {
+                var clusterNode = RootScene.CreateChild("test");
+                clusterNode.Position = new Vector3(cluster.Key.X, 0, cluster.Key.Y);
+
+                for (int z = 0; z < Cluster.ZSize; z++)
+                {
+                    for(int y = 0; y < Cluster.XYSize; y++)
+                    {
+                        for (int x = 0; x < Cluster.XYSize; x++)
+                        {
+                            var block = cluster.Value.GetBlockRelative(x, y, z);
+
+                            if (block.DefID >= 0)
+                            {
+                                var node = clusterNode.CreateChild("test");
+                                var model = node.CreateComponent<StaticModel>();
+                                model.Model = Urho.CoreAssets.Models.Box;
+                                model.Material = Urho.CoreAssets.Materials.DefaultGrey;
+
+                                node.Position = new Vector3(x,z,y);
+                                node.Scale = new Vector3(1, 1, 1);
+                            }
+                        }
+                    }
+                }
+
+            }
 
         }
 

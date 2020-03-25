@@ -66,15 +66,15 @@ namespace GridWorld
 
             public static void InitMCBlocks(World world)
             {
-                world.Info.Textures.Add(new World.TextureInfo("world/std_ground.png", 4, 4));
+                world.Info.Textures.Add(new World.TextureInfo("textures/spritesheet_tiles.png", 8, 16));
                 //world.Info.Textures.Add(new World.TextureInfo("world/grid.png",1,1));
                 if (Dirt != World.BlockDef.EmptyID)
                     return;
 
-                Dirt = world.AddBlockDef(new World.BlockDef("Dirt", 6));
-                Stone = world.AddBlockDef(new World.BlockDef("Stone", 1));
-                Grass = world.AddBlockDef(new World.BlockDef("Grass", 0, 7, 6));
-                Water = world.AddBlockDef(new World.BlockDef("Water", 4));
+                Dirt = world.AddBlockDef(new World.BlockDef("Dirt", 13));
+                Stone = world.AddBlockDef(new World.BlockDef("Stone", 4));
+                Grass = world.AddBlockDef(new World.BlockDef("Grass", 67, 6, 14));
+                Water = world.AddBlockDef(new World.BlockDef("Water", 64));
 
                 world.BlockDefs[Water].Transperant = true;
             }
