@@ -1,0 +1,9 @@
+<cubemap>
+    <face name="skybox_sideHills.jpg" />
+    <face name="skybox_sideHills.jpg" />
+    <face name="skybox_top.jpg" />
+    <face name="skybox_bottom.jpg" />
+    <face name="skybox_sideHills.jpg" />
+    <face name="skybox_sideHills.jpg" />
+    <quality low="0" />
+</cubemap>
