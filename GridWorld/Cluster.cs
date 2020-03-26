@@ -220,6 +220,23 @@ namespace GridWorld
             return Bounds;
         }
 
+        public delegate void BlockCallback(int x, int y, int z, Block block);
+
+        public void DoForEachBlock(BlockCallback callback)
+        {
+            if (callback == null)
+                return;
+
+            for (int z = 0; z < ZSize; z++)
+            {
+                for (int y = 0; y < XYSize; y++)
+                {
+                    for (int x = 0; x < Cluster.XYSize; x++)
+                        callback.Invoke(x, y, z, GetBlockRelative(x, y, z));
+                }
+            }
+        }
+
         [XmlIgnore]
         public object Tag = null;
 

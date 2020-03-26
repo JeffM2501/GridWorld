@@ -89,9 +89,7 @@ namespace GridWorld.Test
                         }
                     }
                 }
-
             }
-
         }
 
         public void SetupDisplay()
