@@ -161,8 +161,8 @@ namespace GridWorld
             {
                 InitMCBlocks(world);
 
-                int XCount = 5;
-                int YCount = 5;
+                int XCount = 2;
+                int YCount = 2;
 
                 for (int x = 0; x < XCount; x++)
                 {

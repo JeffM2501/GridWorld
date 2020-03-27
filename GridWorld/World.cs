@@ -499,8 +499,8 @@ namespace GridWorld
                 return float.MinValue;
 
             Cluster c = Clusters[pos];
-            int x = (int)positionX - pos.X;
-            int y = (int)positionY - pos.Y;
+            int x = (int)positionX - pos.H;
+            int y = (int)positionY - pos.V;
 
             float blockX = positionX - x;
             float blockY = positionY - y;

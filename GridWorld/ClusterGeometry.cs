@@ -926,23 +926,23 @@ namespace GridWorld
                             if (block.Geom != Cluster.Block.Geometry.Empty)
                             {
                                 // see what's around us
-                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, world.BlockFromPosition(cluster.Origin.X + x, cluster.Origin.Y + y, z + 1)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(topTexture), def.Transperant).Add(ComputeLights(world, def, BuildAboveGeometry(world.BlockTextureToTextureOffset(topTexture), world.BlockTextureToTextureID(topTexture), cluster.Origin.X + x, cluster.Origin.Y + y, z, block)));
+                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x, cluster.Origin.V + y, z + 1)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(topTexture), def.Transperant).Add(ComputeLights(world, def, BuildAboveGeometry(world.BlockTextureToTextureOffset(topTexture), world.BlockTextureToTextureID(topTexture), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
 
-                                if (z != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, world.BlockFromPosition(cluster.Origin.X + x, cluster.Origin.Y + y, z - 1)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(bottomTexture), def.Transperant).Add(ComputeLights(world, def, BuildBelowGeometry(world.BlockTextureToTextureOffset(bottomTexture), world.BlockTextureToTextureID(bottomTexture), cluster.Origin.X + x, cluster.Origin.Y + y, z, block)));
+                                if (z != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x, cluster.Origin.V + y, z - 1)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(bottomTexture), def.Transperant).Add(ComputeLights(world, def, BuildBelowGeometry(world.BlockTextureToTextureOffset(bottomTexture), world.BlockTextureToTextureID(bottomTexture), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.X + x, cluster.Origin.Y + y + 1, z) && sideTexture[0] != World.BlockDef.EmptyID && NorthIsOpen(block, world.BlockFromPosition(cluster.Origin.X + x, cluster.Origin.Y + y + 1, z)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[0]), def.Transperant).Add(ComputeLights(world, def, BuildNorthGeometry(world.BlockTextureToTextureOffset(sideTexture[0]), world.BlockTextureToTextureID(sideTexture[0]), cluster.Origin.X + x, cluster.Origin.Y + y, z, block)));
+                                if (!world.PositionIsOffMap(cluster.Origin.H + x, cluster.Origin.V + y + 1, z) && sideTexture[0] != World.BlockDef.EmptyID && NorthIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x, cluster.Origin.V + y + 1, z)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[0]), def.Transperant).Add(ComputeLights(world, def, BuildNorthGeometry(world.BlockTextureToTextureOffset(sideTexture[0]), world.BlockTextureToTextureID(sideTexture[0]), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.X + x, cluster.Origin.Y + y - 1, z) && sideTexture[1] != World.BlockDef.EmptyID && SouthIsOpen(block, world.BlockFromPosition(cluster.Origin.X + x, cluster.Origin.Y + y - 1, z)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[1]), def.Transperant).Add(ComputeLights(world, def, BuildSouthGeometry(world.BlockTextureToTextureOffset(sideTexture[1]), world.BlockTextureToTextureID(sideTexture[1]), cluster.Origin.X + x, cluster.Origin.Y + y, z, block)));
+                                if (!world.PositionIsOffMap(cluster.Origin.H + x, cluster.Origin.V + y - 1, z) && sideTexture[1] != World.BlockDef.EmptyID && SouthIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x, cluster.Origin.V + y - 1, z)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[1]), def.Transperant).Add(ComputeLights(world, def, BuildSouthGeometry(world.BlockTextureToTextureOffset(sideTexture[1]), world.BlockTextureToTextureID(sideTexture[1]), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.X + x + 1, cluster.Origin.Y + y, z) && sideTexture[2] != World.BlockDef.EmptyID && EastIsOpen(block, world.BlockFromPosition(cluster.Origin.X + x + 1, cluster.Origin.Y + y, z)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[2]), def.Transperant).Add(ComputeLights(world, def, BuildEastGeometry(world.BlockTextureToTextureOffset(sideTexture[2]), world.BlockTextureToTextureID(sideTexture[2]), cluster.Origin.X + x, cluster.Origin.Y + y, z, block)));
+                                if (!world.PositionIsOffMap(cluster.Origin.H + x + 1, cluster.Origin.V + y, z) && sideTexture[2] != World.BlockDef.EmptyID && EastIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x + 1, cluster.Origin.V + y, z)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[2]), def.Transperant).Add(ComputeLights(world, def, BuildEastGeometry(world.BlockTextureToTextureOffset(sideTexture[2]), world.BlockTextureToTextureID(sideTexture[2]), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.X + x - 1, cluster.Origin.Y + y, z) && sideTexture[3] != World.BlockDef.EmptyID && WestIsOpen(block, world.BlockFromPosition(cluster.Origin.X + x - 1, cluster.Origin.Y + y, z)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[3]), def.Transperant).Add(ComputeLights(world, def, BuildWestGeometry(world.BlockTextureToTextureOffset(sideTexture[3]), world.BlockTextureToTextureID(sideTexture[3]), cluster.Origin.X + x, cluster.Origin.Y + y, z, block)));
+                                if (!world.PositionIsOffMap(cluster.Origin.H + x - 1, cluster.Origin.V + y, z) && sideTexture[3] != World.BlockDef.EmptyID && WestIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x - 1, cluster.Origin.V + y, z)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[3]), def.Transperant).Add(ComputeLights(world, def, BuildWestGeometry(world.BlockTextureToTextureOffset(sideTexture[3]), world.BlockTextureToTextureID(sideTexture[3]), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
                             }
                         }
                     }

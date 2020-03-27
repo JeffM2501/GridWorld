@@ -130,7 +130,7 @@ namespace GridWorld
 
         public Block GetBlockAbs(int x, int y, int z)
         {
-            return GetBlockRelative(x - Origin.X, y - Origin.Y, z);
+            return GetBlockRelative(x - Origin.H, y - Origin.V, z);
         }
 
         public void SetBlockRelative(int x, int y, int z, Block block)
@@ -140,12 +140,12 @@ namespace GridWorld
 
         public void SetBlockAbs(int x, int y, int z, Block block)
         {
-            SetBlockRelative(x - Origin.X, y - Origin.Y, z, block);
+            SetBlockRelative(x - Origin.H, y - Origin.V, z, block);
         }
 
         public ClusterPos GetPositionRelative(Vector3 vec)
         {
-            return new ClusterPos((int)vec.X - Origin.X, (int)vec.Y - Origin.Y);
+            return new ClusterPos((int)vec.X - Origin.H, (int)vec.Y - Origin.V);
         }
 
         public Vector3 GetBlockRelativePostion(int index)
@@ -170,21 +170,21 @@ namespace GridWorld
         {
             public static ClusterPos Zero = new ClusterPos(0, 0);
 
-            public int X = 0;
-            public int Y = 0;
+            public int H = 0;
+            public int V = 0;
 
             public ClusterPos() { }
-            public ClusterPos(int x, int y) { X = x; Y = y; }
-            public ClusterPos(ClusterPos pos) { X = pos.X; Y = pos.Y; }
+            public ClusterPos(int h, int v) { H = h; V = v; }
+            public ClusterPos(ClusterPos pos) { H = pos.H; V = pos.V; }
 
             public override int GetHashCode()
             {
-                return X.GetHashCode() ^ Y.GetHashCode();
+                return H.GetHashCode() ^ V.GetHashCode();
             }
 
             public override string ToString()
             {
-                return X.ToString() + "," + Y.ToString();
+                return H.ToString() + "," + V.ToString();
             }
 
             public override bool Equals(object obj)
@@ -193,7 +193,7 @@ namespace GridWorld
                 if (p == null)
                     return false;
 
-                return p.X == X && p.Y == Y;
+                return p.H == H && p.V == V;
             }
         }
 
@@ -208,7 +208,7 @@ namespace GridWorld
                 if (!BoundsValid)
                 {
                     BoundsValid = true;
-                    _Bounds = new BoundingBox(new Vector3(Origin.X, Origin.Y, 0), new Vector3(Origin.X + XYSize, Origin.Y + XYSize, ZSize));
+                    _Bounds = new BoundingBox(new Vector3(Origin.H, Origin.V, 0), new Vector3(Origin.H + XYSize, Origin.V + XYSize, ZSize));
                 }
 
                 return _Bounds;

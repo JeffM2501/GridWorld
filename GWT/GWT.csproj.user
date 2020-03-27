@@ -2,7 +2,7 @@
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|AnyCPU'">
     <StartAction>Program</StartAction>
-    <StartProgram>D:\Projects\GridWorldTest\_test\GridWorld.Test.exe</StartProgram>
-    <StartWorkingDirectory>D:\Projects\GridWorldTest\_test\</StartWorkingDirectory>
+    <StartProgram>C:\Users\myersj\Desktop\GridWorldTest\trunk\_test\GridWorld.Test.exe</StartProgram>
+    <StartWorkingDirectory>C:\Users\myersj\Desktop\GridWorldTest\trunk\_test\</StartWorkingDirectory>
   </PropertyGroup>
 </Project>

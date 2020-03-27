@@ -65,29 +65,35 @@ namespace GridWorld.Test
 
             foreach (var cluster in Map.Clusters)
             {
+                var clusterData = cluster.Value;
+
                 var clusterNode = RootScene.CreateChild("test");
-                clusterNode.Position = new Vector3(cluster.Key.X, 0, cluster.Key.Y);
+                clusterNode.Position = new Vector3(cluster.Key.H, 0, cluster.Key.V);
 
-                for (int z = 0; z < Cluster.ZSize; z++)
+                ClusterGeometry.BuildGeometry(Map, clusterData);
+
+                if (clusterData.Geometry != null)
                 {
-                    for(int y = 0; y < Cluster.XYSize; y++)
+                    foreach (var mesh in clusterData.Geometry.MeshList)
                     {
-                        for (int x = 0; x < Cluster.XYSize; x++)
-                        {
-                            var block = cluster.Value.GetBlockRelative(x, y, z);
-
-                            if (block.DefID >= 0)
-                            {
-                                var node = clusterNode.CreateChild("test");
-                                var model = node.CreateComponent<StaticModel>();
-                                model.Model = Urho.CoreAssets.Models.Box;
-                                model.Material = Urho.CoreAssets.Materials.DefaultGrey;
-
-                                node.Position = new Vector3(x,z,y);
-                                node.Scale = new Vector3(1, 1, 1);
-                            }
-                        }
+              
                     }
+                }
+                else
+                {
+                    cluster.Value.DoForEachBlock((x, y, z, block) =>
+                    {
+                        if (block.DefID >= 0)
+                        {
+                            var node = clusterNode.CreateChild("test");
+                            var model = node.CreateComponent<StaticModel>();
+                            model.Model = Urho.CoreAssets.Models.Box;
+                            model.Material = Urho.CoreAssets.Materials.DefaultGrey;
+
+                            node.Position = new Vector3(x, z, y);
+                            node.Scale = new Vector3(1, 1, 1);
+                        }
+                    });
                 }
             }
         }
