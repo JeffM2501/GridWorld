@@ -81,7 +81,7 @@ namespace GridWorld.Test
                 }
                 else
                 {
-                    cluster.Value.DoForEachBlock((x, y, z, block) =>
+                    cluster.Value.DoForEachBlock((pos, block) =>
                     {
                         if (block.DefID >= 0)
                         {
@@ -90,7 +90,7 @@ namespace GridWorld.Test
                             model.Model = Urho.CoreAssets.Models.Box;
                             model.Material = Urho.CoreAssets.Materials.DefaultGrey;
 
-                            node.Position = new Vector3(x, z, y);
+                            node.Position = pos;
                             node.Scale = new Vector3(1, 1, 1);
                         }
                     });

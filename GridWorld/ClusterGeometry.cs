@@ -236,11 +236,11 @@ namespace GridWorld
             {
                 World.TextureInfo info = world.Info.Textures[texture];
 
-                int imageY = imageOffset / info.XCount;
-                int imageX = imageOffset - imageY * info.XCount;
+                int imageY = imageOffset / info.HCount;
+                int imageX = imageOffset - imageY * info.HCount;
 
-                float imageGirdX = 1.0f / info.XCount;
-                float imageGirdY = 1.0f / info.YCount;
+                float imageGirdX = 1.0f / info.HCount;
+                float imageGirdY = 1.0f / info.VCount;
 
                 Vector2[] ret = new Vector2[4] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) };
                 //           return ret;
@@ -257,12 +257,12 @@ namespace GridWorld
                 return GetUVsForOffset(imageOffset, texture, TheWorld);
             }
 
-            protected Face BuildAboveGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block)
+            protected Face BuildAboveGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
-                return BuildAboveGeometry(imageOffset, texture, x, y, z, block, TheWorld);
+                return BuildAboveGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
 
-            public static Face BuildAboveGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block, World world)
+            public static Face BuildAboveGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block, World world)
             {
                 Face face = new Face();
 
@@ -277,137 +277,137 @@ namespace GridWorld
                     case Cluster.Block.Geometry.Solid:
                     case Cluster.Block.Geometry.HalfUpper:
                         face.Normal = Vector3.UnitZ;
-                        face.Verts[0] = new Vector3(x, y, z + 1);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 1);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 1);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 1);
+                        face.Verts[0] = new Vector3(h, d + 1, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 1, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 1, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.HalfLower:
                         face.Normal = Vector3.UnitZ;
-                        face.Verts[0] = new Vector3(x, y, z + 0.5f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0.5f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0.5f);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.Fluid:
                         face.Normal = Vector3.UnitZ;
-                        face.Verts[0] = new Vector3(x, y, z + 0.95f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0.95f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0.95f);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0.95f);
+                        face.Verts[0] = new Vector3(h, d + 0.95f, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.95f, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.95f, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 0.95f, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.NorthFullRamp:
-                        face.Normal = new Vector3(0, -1, 1);
+                        face.Normal = new Vector3(0, 1, -1);
 
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 1);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 1);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 1, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.SouthFullRamp:
                         face.Normal = new Vector3(0, 1, 1);
 
-                        face.Verts[0] = new Vector3(x, y, z + 1);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 1);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[3] = new Vector3(x, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d + 1, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 1, v);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                        face.Verts[3] = new Vector3(h, d, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.EastFullRamp:
-                        face.Normal = new Vector3(-1, 0, 1);
+                        face.Normal = new Vector3(-1, 1, 0);
 
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 1);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 1);
-                        face.Verts[3] = new Vector3(x, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d+ 1, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
+                        face.Verts[3] = new Vector3(h, d, v + 1);
                         break;
 
 
                     case Cluster.Block.Geometry.WestFullRamp:
-                        face.Normal = new Vector3(1, 0, 1);
+                        face.Normal = new Vector3(1, 1, 0);
 
-                        face.Verts[0] = new Vector3(x, y, z + 1);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 1);
+                        face.Verts[0] = new Vector3(h, d + 1, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 1, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.NorthHalfLowerRamp:
-                        face.Normal = new Vector3(0, -0.5f, 1);
+                        face.Normal = new Vector3(0, 1, -0.5f);
 
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0.5f);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.SouthHalfLowerRamp:
-                        face.Normal = new Vector3(0, 0.5f, 1);
+                        face.Normal = new Vector3(0, 1, 0.5f);
 
-                        face.Verts[0] = new Vector3(x, y, z + 0.5f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0.5f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[3] = new Vector3(x, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                        face.Verts[3] = new Vector3(h, d, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.EastHalfLowerRamp:
-                        face.Normal = new Vector3(-0.5f, 0, 1);
+                        face.Normal = new Vector3(-0.5f, 1, 0);
 
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0.5f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0.5f);
-                        face.Verts[3] = new Vector3(x, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
+                        face.Verts[3] = new Vector3(h, d, v + 1);
                         break;
 
 
                     case Cluster.Block.Geometry.WestHalfLowerRamp:
-                        face.Normal = new Vector3(0.5f, 0, 1);
+                        face.Normal = new Vector3(0.5f, 1, 0);
 
-                        face.Verts[0] = new Vector3(x, y, z + 0.5f);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.NorthHalfUpperRamp:
-                        face.Normal = new Vector3(0, -0.5f, 1);
+                        face.Normal = new Vector3(0, 1, -0.5f);
 
-                        face.Verts[0] = new Vector3(x, y, z + 0.5f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0.5f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 1);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 1f);
+                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 1f, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.SouthHalfUpperRamp:
-                        face.Normal = new Vector3(0, 0.5f, 1);
+                        face.Normal = new Vector3(0, 1, 0.5f);
 
-                        face.Verts[0] = new Vector3(x, y, z + 1f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 1f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0.5f);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d + 1f, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 1f, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.EastHalfUpperRamp:
-                        face.Normal = new Vector3(-0.5f, 0, 1);
+                        face.Normal = new Vector3(-0.5f, 1, 0);
 
-                        face.Verts[0] = new Vector3(x, y, z + 0.5f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 1);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 1f);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 1, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 1f, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
                         break;
 
 
                     case Cluster.Block.Geometry.WestHalfUpperRamp:
-                        face.Normal = new Vector3(0.5f, 0, 1);
+                        face.Normal = new Vector3(0.5f, 1, 0);
 
-                        face.Verts[0] = new Vector3(x, y, z + 1f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0.5f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0.5f);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 1f);
+                        face.Verts[0] = new Vector3(h, d + 1f, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
+                        face.Verts[3] = new Vector3(h, d + 1f, v + 1);
                         break;
                 }
 
@@ -416,12 +416,12 @@ namespace GridWorld
                 return face;
             }
 
-            protected Face BuildBelowGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block)
+            protected Face BuildBelowGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
-                return BuildBelowGeometry(imageOffset, texture, x, y, z, block, TheWorld);
+                return BuildBelowGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
 
-            public static Face BuildBelowGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block, World world)
+            public static Face BuildBelowGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block, World world)
             {
                 if (block.Geom == Cluster.Block.Geometry.Empty)
                     return Face.Empty;
@@ -432,28 +432,28 @@ namespace GridWorld
 
                 face.UVs = GetUVsForOffset(imageOffset, texture, world);
                 Array.Reverse(face.UVs);
-                face.Normal = Vector3.UnitZ * -1.0f;
+                face.Normal = Vector3.UnitY * -1.0f;
 
                 float ZOffset = 0;
                 if (block.Geom == Cluster.Block.Geometry.HalfUpper)
                     ZOffset = 0.5f;
 
-                face.Verts[0] = new Vector3(x, y, z + ZOffset);
-                face.Verts[1] = new Vector3(x, y + 1, z + ZOffset);
-                face.Verts[2] = new Vector3(x + 1, y + 1, z + ZOffset);
-                face.Verts[3] = new Vector3(x + 1, y, z + ZOffset);
+                face.Verts[0] = new Vector3(h, d + ZOffset, v);
+                face.Verts[1] = new Vector3(h, d + ZOffset, v + 1);
+                face.Verts[2] = new Vector3(h + 1, d + ZOffset, v + 1);
+                face.Verts[3] = new Vector3(h + 1, d + ZOffset, v);
 
                 return face;
             }
 
             protected static float RampCenterUOffset = 0.017f; //015625f;
 
-            protected Face BuildNorthGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block)
+            protected Face BuildNorthGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
-                return BuildNorthGeometry(imageOffset, texture, x, y, z, block, TheWorld);
+                return BuildNorthGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
 
-            public static Face BuildNorthGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block, World world)
+            public static Face BuildNorthGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block, World world)
             {
                 Face face = new Face();
 
@@ -461,7 +461,7 @@ namespace GridWorld
 
                 face.UVs = GetUVsForOffset(imageOffset, texture, world);
                 //Array.Reverse(face.UVs);
-                face.Normal = Vector3.UnitY;
+                face.Normal = Vector3.UnitZ;
 
                 float lower = 0;
                 float upper = 1;
@@ -483,50 +483,50 @@ namespace GridWorld
                     case Cluster.Block.Geometry.NorthHalfLowerRamp:
                     case Cluster.Block.Geometry.NorthHalfUpperRamp:
                     case Cluster.Block.Geometry.SouthHalfUpperRamp:
-                        face.Verts[3] = new Vector3(x, y + 1, z + lower);
-                        face.Verts[0] = new Vector3(x, y + 1, z + upper);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z + upper);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + lower);
+                        face.Verts[3] = new Vector3(h, d + lower, v + 1);
+                        face.Verts[0] = new Vector3(h, d + upper, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + upper, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d + lower, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.Fluid:
-                        face.Verts[3] = new Vector3(x, y + 1, z);
-                        face.Verts[0] = new Vector3(x, y + 1, z + 0.95f);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z + 0.95f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
+                        face.Verts[3] = new Vector3(h, d, v + 1);
+                        face.Verts[0] = new Vector3(h, d + 0.95f, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.95f, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.EastFullRamp:
-                        face.Verts[0] = new Vector3(x, y + 1, z);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z + 1);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + 1, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[1], face.UVs[0], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset) };
                         break;
 
                     case Cluster.Block.Geometry.WestFullRamp:
-                        face.Verts[0] = new Vector3(x, y + 1, z);
-                        face.Verts[1] = new Vector3(x, y + 1, z + 1);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d, v + 1);
+                        face.Verts[1] = new Vector3(h, d + 1, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[1], face.UVs[0] };
                         break;
 
                     case Cluster.Block.Geometry.EastHalfLowerRamp:
-                        face.Verts[0] = new Vector3(x, y + 1, z);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z + 0.5f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[1], face.UVs[0], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f) };
                         break;
 
                     case Cluster.Block.Geometry.WestHalfLowerRamp:
-                        face.Verts[0] = new Vector3(x, y + 1, z);
-                        face.Verts[1] = new Vector3(x, y + 1, z + 0.5f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d, v + 1);
+                        face.Verts[1] = new Vector3(h, d + 0.5f, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[1], face.UVs[0] };
@@ -534,31 +534,31 @@ namespace GridWorld
 
                     case Cluster.Block.Geometry.EastHalfUpperRamp:
 
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0);
-                        face.Verts[0] = new Vector3(x, y + 1, z + 0.5f);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z + 1);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0);
+                        face.Verts[3] = new Vector3(h, d + 0, v + 1);
+                        face.Verts[0] = new Vector3(h, d + 0.5f, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + 1, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d + 0, v + 1);
 
                         break;
 
                     case Cluster.Block.Geometry.WestHalfUpperRamp:
 
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0);
-                        face.Verts[0] = new Vector3(x, y + 1, z + 1);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z + 0.5f);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0);
+                        face.Verts[3] = new Vector3(h, d + 0, v + 1);
+                        face.Verts[0] = new Vector3(h, d + 1, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d + 0, v + 1);
                         break;
                 }
 
                 return face;
             }
 
-            protected Face BuildSouthGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block)
+            protected Face BuildSouthGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
-                return BuildSouthGeometry(imageOffset, texture, x, y, z, block, TheWorld);
+                return BuildSouthGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
 
-            public static Face BuildSouthGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block, World world)
+            public static Face BuildSouthGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block, World world)
             {
                 Face face = new Face();
 
@@ -566,7 +566,7 @@ namespace GridWorld
 
                 face.UVs = GetUVsForOffset(imageOffset, texture, world);
                 Array.Reverse(face.UVs);
-                face.Normal = Vector3.UnitY * -1;
+                face.Normal = Vector3.UnitZ * -1;
 
                 float lower = 0;
                 float upper = 1;
@@ -588,79 +588,79 @@ namespace GridWorld
                     case Cluster.Block.Geometry.SouthHalfLowerRamp:
                     case Cluster.Block.Geometry.NorthHalfUpperRamp:
                     case Cluster.Block.Geometry.SouthHalfUpperRamp:
-                        face.Verts[0] = new Vector3(x, y, z + lower);
-                        face.Verts[1] = new Vector3(x + 1, y, z + lower);
-                        face.Verts[2] = new Vector3(x + 1, y, z + upper);
-                        face.Verts[3] = new Vector3(x, y, z + upper);
+                        face.Verts[0] = new Vector3(h, d + lower, v);
+                        face.Verts[1] = new Vector3(h + 1, d + lower,v);
+                        face.Verts[2] = new Vector3(h + 1, d + upper, v);
+                        face.Verts[3] = new Vector3(h, d + upper, v);
                         break;
 
                     case Cluster.Block.Geometry.Fluid:
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x + 1, y, z + 0.95f);
-                        face.Verts[3] = new Vector3(x, y, z + 0.95f);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.95f, v);
+                        face.Verts[3] = new Vector3(h, d + 0.95f, v);
                         break;
 
                     case Cluster.Block.Geometry.EastFullRamp:
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x + 1, y, z + 1);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 1, v);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[2] };
                         break;
 
                     case Cluster.Block.Geometry.WestFullRamp:
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x, y, z + 1);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h, d + 1, v);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[2], face.UVs[3] };
                         break;
 
                     case Cluster.Block.Geometry.EastHalfLowerRamp:
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x + 1, y, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[2] };
                         break;
 
                     case Cluster.Block.Geometry.WestHalfLowerRamp:
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y, z);
-                        face.Verts[2] = new Vector3(x, y, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v);
+                        face.Verts[2] = new Vector3(h, d + 0.5f, v);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[2], face.UVs[3] };
                         break;
 
                     case Cluster.Block.Geometry.EastHalfUpperRamp:
-                        face.Verts[0] = new Vector3(x, y, z + 0);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0);
-                        face.Verts[2] = new Vector3(x + 1, y, z + 1);
-                        face.Verts[3] = new Vector3(x, y, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d + 0, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 0, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 1, v);
+                        face.Verts[3] = new Vector3(h, d + 0.5f, v);
                         break;
 
                     case Cluster.Block.Geometry.WestHalfUpperRamp:
-                        face.Verts[0] = new Vector3(x, y, z + 0);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0);
-                        face.Verts[2] = new Vector3(x + 1, y, z + 0.5f);
-                        face.Verts[3] = new Vector3(x, y, z + 1);
+                        face.Verts[0] = new Vector3(h, d + 0, v);
+                        face.Verts[1] = new Vector3(h + 1, d + 0, v);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v);
+                        face.Verts[3] = new Vector3(h, d + 1, v);
                         break;
                 }
 
                 return face;
             }
 
-            protected Face BuildEastGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block)
+            protected Face BuildEastGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
-                return BuildEastGeometry(imageOffset, texture, x, y, z, block, TheWorld);
+                return BuildEastGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
 
-            public static Face BuildEastGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block, World world)
+            public static Face BuildEastGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block, World world)
             {
                 Face face = new Face();
 
@@ -690,77 +690,77 @@ namespace GridWorld
                     case Cluster.Block.Geometry.EastHalfLowerRamp:
                     case Cluster.Block.Geometry.EastHalfUpperRamp:
                     case Cluster.Block.Geometry.WestHalfUpperRamp:
-                        face.Verts[2] = new Vector3(x + 1, y, z + lower);
-                        face.Verts[3] = new Vector3(x + 1, y + 1, z + lower);
-                        face.Verts[0] = new Vector3(x + 1, y + 1, z + upper);
-                        face.Verts[1] = new Vector3(x + 1, y, z + upper);
+                        face.Verts[2] = new Vector3(h + 1, d + lower, v);
+                        face.Verts[3] = new Vector3(h + 1, d + lower, v + 1);
+                        face.Verts[0] = new Vector3(h + 1, d + upper, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + upper, v);
                         break;
 
                     case Cluster.Block.Geometry.Fluid:
-                        face.Verts[2] = new Vector3(x + 1, y, z);
-                        face.Verts[3] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[0] = new Vector3(x + 1, y + 1, z + 0.95f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0.95f);
+                        face.Verts[2] = new Vector3(h + 1, d, v);
+                        face.Verts[3] = new Vector3(h + 1, d, v + 1);
+                        face.Verts[0] = new Vector3(h + 1, d + 0.95f, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.95f, v);
                         break;
 
                     case Cluster.Block.Geometry.NorthFullRamp:
-                        face.Verts[0] = new Vector3(x + 1, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 1);
+                        face.Verts[0] = new Vector3(h + 1, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[0], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[1] };
                         break;
 
                     case Cluster.Block.Geometry.SouthFullRamp:
-                        face.Verts[0] = new Vector3(x + 1, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[2] = new Vector3(x + 1, y, z + 1);
+                        face.Verts[0] = new Vector3(h + 1, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d + 1, v);
                         face.Verts[3] = face.Verts[2];
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[1], face.UVs[0] };
                         break;
 
                     case Cluster.Block.Geometry.NorthHalfLowerRamp:
-                        face.Verts[0] = new Vector3(x + 1, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[2] = new Vector3(x + 1, y + 1, z + 0.5f);
+                        face.Verts[0] = new Vector3(h + 1, d,v);
+                        face.Verts[1] = new Vector3(h + 1, d, v+ 1);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[0], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[1] };
                         break;
 
                     case Cluster.Block.Geometry.SouthHalfLowerRamp:
-                        face.Verts[0] = new Vector3(x + 1, y, z);
-                        face.Verts[1] = new Vector3(x + 1, y + 1, z);
-                        face.Verts[2] = new Vector3(x + 1, y, z + 0.5f);
+                        face.Verts[0] = new Vector3(h + 1, d, v);
+                        face.Verts[1] = new Vector3(h + 1, d, v + 1);
+                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v);
                         face.Verts[3] = face.Verts[2];
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[1], face.UVs[0] };
                         break;
 
                     case Cluster.Block.Geometry.NorthHalfUpperRamp:
-                        face.Verts[2] = new Vector3(x + 1, y, z + 0);
-                        face.Verts[3] = new Vector3(x + 1, y + 1, z + 0);
-                        face.Verts[0] = new Vector3(x + 1, y + 1, z + 1f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 0.5f);
+                        face.Verts[2] = new Vector3(h + 1, d + 0, v);
+                        face.Verts[3] = new Vector3(h + 1, d + 0, v + 1);
+                        face.Verts[0] = new Vector3(h + 1, d + 1f, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
                         break;
 
                     case Cluster.Block.Geometry.SouthHalfUpperRamp:
-                        face.Verts[2] = new Vector3(x + 1, y, z + 0);
-                        face.Verts[3] = new Vector3(x + 1, y + 1, z + 0);
-                        face.Verts[0] = new Vector3(x + 1, y + 1, z + 0.5f);
-                        face.Verts[1] = new Vector3(x + 1, y, z + 1);
+                        face.Verts[2] = new Vector3(h + 1, d + 0, v);
+                        face.Verts[3] = new Vector3(h + 1, d + 0, v + 1);
+                        face.Verts[0] = new Vector3(h + 1, d + 0.5f, v + 1);
+                        face.Verts[1] = new Vector3(h + 1, d + 1, v);
                         break;
                 }
 
                 return face;
             }
 
-            protected Face BuildWestGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block)
+            protected Face BuildWestGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
-                return BuildWestGeometry(imageOffset, texture, x, y, z, block, TheWorld);
+                return BuildWestGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
 
-            public static Face BuildWestGeometry(int imageOffset, int texture, int x, int y, int z, Cluster.Block block, World world)
+            public static Face BuildWestGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block, World world)
             {
                 Face face = new Face();
 
@@ -790,67 +790,67 @@ namespace GridWorld
                     case Cluster.Block.Geometry.WestHalfLowerRamp:
                     case Cluster.Block.Geometry.EastHalfUpperRamp:
                     case Cluster.Block.Geometry.WestHalfUpperRamp:
-                        face.Verts[1] = new Vector3(x, y, z + lower);
-                        face.Verts[2] = new Vector3(x, y, z + upper);
-                        face.Verts[3] = new Vector3(x, y + 1, z + upper);
-                        face.Verts[0] = new Vector3(x, y + 1, z + lower);
+                        face.Verts[1] = new Vector3(h, d + lower, v);
+                        face.Verts[2] = new Vector3(h, d + upper, v);
+                        face.Verts[3] = new Vector3(h, d + upper, v + 1);
+                        face.Verts[0] = new Vector3(h, d + lower, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.Fluid:
-                        face.Verts[1] = new Vector3(x, y, z);
-                        face.Verts[2] = new Vector3(x, y, z + 0.95f);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0.95f);
-                        face.Verts[0] = new Vector3(x, y + 1, z);
+                        face.Verts[1] = new Vector3(h, d, v);
+                        face.Verts[2] = new Vector3(h, d + 0.95f, v);
+                        face.Verts[3] = new Vector3(h, d + 0.95f, v + 1);
+                        face.Verts[0] = new Vector3(h, d, v + 1);
                         break;
 
                     case Cluster.Block.Geometry.NorthFullRamp:
-                        face.Verts[0] = new Vector3(x, y + 1, z);
-                        face.Verts[1] = new Vector3(x, y, z);
-                        face.Verts[2] = new Vector3(x, y + 1, z + 1);
+                        face.Verts[0] = new Vector3(h, d, v + 1);
+                        face.Verts[1] = new Vector3(h, d, v);
+                        face.Verts[2] = new Vector3(h, d + 1, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[2], face.UVs[3] };
                         break;
 
                     case Cluster.Block.Geometry.SouthFullRamp:
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x, y, z + 1);
-                        face.Verts[2] = new Vector3(x, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h, d + 1, v);
+                        face.Verts[2] = new Vector3(h, d, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[2], face.UVs[3] };
                         break;
 
                     case Cluster.Block.Geometry.NorthHalfLowerRamp:
-                        face.Verts[0] = new Vector3(x, y + 1, z);
-                        face.Verts[1] = new Vector3(x, y, z);
-                        face.Verts[2] = new Vector3(x, y + 1, z + 0.5f);
+                        face.Verts[0] = new Vector3(h, d, v + 1);
+                        face.Verts[1] = new Vector3(h, d, v);
+                        face.Verts[2] = new Vector3(h, d + 0.5f, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[2], face.UVs[3] };
                         break;
 
                     case Cluster.Block.Geometry.SouthHalfLowerRamp:
-                        face.Verts[0] = new Vector3(x, y, z);
-                        face.Verts[1] = new Vector3(x, y, z + 0.5f);
-                        face.Verts[2] = new Vector3(x, y + 1, z);
+                        face.Verts[0] = new Vector3(h, d, v);
+                        face.Verts[1] = new Vector3(h, d + 0.5f, v);
+                        face.Verts[2] = new Vector3(h, d, v + 1);
                         face.Verts[3] = face.Verts[2];
 
                         face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[2], face.UVs[3] };
                         break;
 
                     case Cluster.Block.Geometry.NorthHalfUpperRamp:
-                        face.Verts[1] = new Vector3(x, y, z + 0);
-                        face.Verts[2] = new Vector3(x, y, z + 0.5f);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 1);
-                        face.Verts[0] = new Vector3(x, y + 1, z + 0);
+                        face.Verts[1] = new Vector3(h, d + 0, v);
+                        face.Verts[2] = new Vector3(h, d + 0.5f, v);
+                        face.Verts[3] = new Vector3(h, d + 1, v + 1);
+                        face.Verts[0] = new Vector3(h, d + 0 ,v + 1);
                         break;
 
                     case Cluster.Block.Geometry.SouthHalfUpperRamp:
-                        face.Verts[1] = new Vector3(x, y, z + 0);
-                        face.Verts[2] = new Vector3(x, y, z + 1);
-                        face.Verts[3] = new Vector3(x, y + 1, z + 0.5f);
-                        face.Verts[0] = new Vector3(x, y + 1, z + 0);
+                        face.Verts[1] = new Vector3(h, d + 0, v);
+                        face.Verts[2] = new Vector3(h, d + 1, v);
+                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
+                        face.Verts[0] = new Vector3(h, d + 0, v + 1);
                         break;
                 }
 
@@ -893,15 +893,11 @@ namespace GridWorld
 
                 ClusterGeometry geometry = new ClusterGeometry();
                 geometry.ClusterOrigin = cluster.Origin;
-                for (int z = 0; z < Cluster.ZSize; z++)
-                {
-                    for (int x = 0; x < Cluster.XYSize; x++)
-                    {
-                        for (int y = 0; y < Cluster.XYSize; y++)
+
+                cluster.DoForEachBlock((h, v, d, block)=>
                         {
-                            Cluster.Block block = cluster.GetBlockRelative(x, y, z);
                             if (block.DefID < 0 || block.DefID >= world.BlockDefs.Count)
-                                continue;
+                                return;
 
                             World.BlockDef def = world.BlockDefs[block.DefID];
 
@@ -926,28 +922,26 @@ namespace GridWorld
                             if (block.Geom != Cluster.Block.Geometry.Empty)
                             {
                                 // see what's around us
-                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x, cluster.Origin.V + y, z + 1)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(topTexture), def.Transperant).Add(ComputeLights(world, def, BuildAboveGeometry(world.BlockTextureToTextureOffset(topTexture), world.BlockTextureToTextureID(topTexture), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
+                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h, cluster.Origin.V + v, d + 1)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(topTexture), def.Transperant).Add(ComputeLights(world, def, BuildAboveGeometry(world.BlockTextureToTextureOffset(topTexture), world.BlockTextureToTextureID(topTexture), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (z != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x, cluster.Origin.V + y, z - 1)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(bottomTexture), def.Transperant).Add(ComputeLights(world, def, BuildBelowGeometry(world.BlockTextureToTextureOffset(bottomTexture), world.BlockTextureToTextureID(bottomTexture), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
+                                if (d != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h, cluster.Origin.V + v, d - 1)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(bottomTexture), def.Transperant).Add(ComputeLights(world, def, BuildBelowGeometry(world.BlockTextureToTextureOffset(bottomTexture), world.BlockTextureToTextureID(bottomTexture), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.H + x, cluster.Origin.V + y + 1, z) && sideTexture[0] != World.BlockDef.EmptyID && NorthIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x, cluster.Origin.V + y + 1, z)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[0]), def.Transperant).Add(ComputeLights(world, def, BuildNorthGeometry(world.BlockTextureToTextureOffset(sideTexture[0]), world.BlockTextureToTextureID(sideTexture[0]), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
+                                if (!world.PositionIsOffMap(cluster.Origin.H + h, cluster.Origin.V + v + 1, d) && sideTexture[0] != World.BlockDef.EmptyID && NorthIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h, cluster.Origin.V + v + 1, d)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[0]), def.Transperant).Add(ComputeLights(world, def, BuildNorthGeometry(world.BlockTextureToTextureOffset(sideTexture[0]), world.BlockTextureToTextureID(sideTexture[0]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.H + x, cluster.Origin.V + y - 1, z) && sideTexture[1] != World.BlockDef.EmptyID && SouthIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x, cluster.Origin.V + y - 1, z)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[1]), def.Transperant).Add(ComputeLights(world, def, BuildSouthGeometry(world.BlockTextureToTextureOffset(sideTexture[1]), world.BlockTextureToTextureID(sideTexture[1]), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
+                                if (!world.PositionIsOffMap(cluster.Origin.H + h, cluster.Origin.V + v - 1, d) && sideTexture[1] != World.BlockDef.EmptyID && SouthIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h, cluster.Origin.V + v - 1, d)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[1]), def.Transperant).Add(ComputeLights(world, def, BuildSouthGeometry(world.BlockTextureToTextureOffset(sideTexture[1]), world.BlockTextureToTextureID(sideTexture[1]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.H + x + 1, cluster.Origin.V + y, z) && sideTexture[2] != World.BlockDef.EmptyID && EastIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x + 1, cluster.Origin.V + y, z)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[2]), def.Transperant).Add(ComputeLights(world, def, BuildEastGeometry(world.BlockTextureToTextureOffset(sideTexture[2]), world.BlockTextureToTextureID(sideTexture[2]), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
+                                if (!world.PositionIsOffMap(cluster.Origin.H + h + 1, cluster.Origin.V + v, d) && sideTexture[2] != World.BlockDef.EmptyID && EastIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h + 1, cluster.Origin.V + v, d)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[2]), def.Transperant).Add(ComputeLights(world, def, BuildEastGeometry(world.BlockTextureToTextureOffset(sideTexture[2]), world.BlockTextureToTextureID(sideTexture[2]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.H + x - 1, cluster.Origin.V + y, z) && sideTexture[3] != World.BlockDef.EmptyID && WestIsOpen(block, world.BlockFromPosition(cluster.Origin.H + x - 1, cluster.Origin.V + y, z)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[3]), def.Transperant).Add(ComputeLights(world, def, BuildWestGeometry(world.BlockTextureToTextureOffset(sideTexture[3]), world.BlockTextureToTextureID(sideTexture[3]), cluster.Origin.H + x, cluster.Origin.V + y, z, block)));
+                                if (!world.PositionIsOffMap(cluster.Origin.H + h - 1, cluster.Origin.V + v, d) && sideTexture[3] != World.BlockDef.EmptyID && WestIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h - 1, cluster.Origin.V + v, d)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[3]), def.Transperant).Add(ComputeLights(world, def, BuildWestGeometry(world.BlockTextureToTextureOffset(sideTexture[3]), world.BlockTextureToTextureID(sideTexture[3]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
                             }
-                        }
-                    }
-                }
-
+                    });
+   
                 cluster.Geometry = geometry;
             }
 
