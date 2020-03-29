@@ -5,22 +5,29 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Urho;
+using Urho.Gui;
+
+using GridWorld.Test.Components;
 
 namespace GridWorld.Test
 {
     internal class GameApp : Application
     {
+        private bool Exiting = false;
+        public event EventHandler ApplicationExiting = null;
+
         public GameApp(ApplicationOptions options = null) : base(options) { }
 
         public Scene RootScene = null;
         public static Node CameraNode = null;
 
-        Zone GlobalIlluminationZone = null;
+        public static Color AmbientColor = new Color(0.35f, 0.35f, 0.35f);
 
         public Node PlayerNode = null;
 
         GridWorld.World Map = new World();
 
+        public UIElement AvatarStatusElement = null;
 
         protected override void Start()
         {
@@ -29,10 +36,59 @@ namespace GridWorld.Test
             Input.SetMouseMode(MouseMode.Absolute);
             Input.SetMouseVisible(true);
 
-            Renderer.ShadowQuality = ShadowQuality.PcfN24Bit;
-            Renderer.ShadowMapSize = (4) * 1024;
+            Input.ExitRequested += Input_ExitRequested;
 
+            SetupRenderer();
+  
             SetupScene();
+
+            SetupUI();
+        }
+
+        private void Input_ExitRequested(ExitRequestedEventArgs obj)
+        {
+            PreExit();
+        }
+
+        protected void PreExit()
+        {
+            Exiting = true;
+            ApplicationExiting?.Invoke(this, EventArgs.Empty);
+
+//             if (Config.Current != null && Config.Current.WinType == Config.WindowTypes.Window)
+//             {
+//                 Config.Current.WindowBounds = new System.Drawing.Rectangle(Graphics.WindowPosition.X, Graphics.WindowPosition.Y, Graphics.Width, Graphics.Height);
+//             }
+        }
+
+        protected void DoExit()
+        {
+            PreExit();
+            Exit();
+        }
+
+        public void SetupUI()
+        {
+            AvatarStatusElement = new UIElement();
+            UI.Root.AddChild(AvatarStatusElement);
+
+            AvatarStatusElement.EnableAnchor = true;
+            AvatarStatusElement.SetMaxAnchor(0.125f, 0.125f);
+            AvatarStatusElement.SetMinAnchor(0, 0);
+
+            var text = new Text();
+            text.Value = "Walking";
+            text.HorizontalAlignment = HorizontalAlignment.Left;
+            text.VerticalAlignment = VerticalAlignment.Top;
+            text.SetFont(ResourceCache.GetFont("fonts/Open_Sans/OpenSans-Regular.ttf"), 14);
+            text.Position = new IntVector2(10,0);
+            text.SetColor(Color.Gray);
+            text.SetMaxAnchor(1, 1);
+            text.SetMinAnchor(0, 0);
+            AvatarStatusElement.AddChild(text);
+
+            PlayerNode.GetComponent<PlayerAvatarController>().FlightStatusChanged += new EventHandler((o, e) => text.Value = (o as PlayerAvatarController).Flying ? "Flying" : "Walking");
+
         }
 
         public void SetupScene()
@@ -45,32 +101,15 @@ namespace GridWorld.Test
 
             RootScene.CreateComponent<DebugRenderer>();
 
-            string skyboxName = "hills.xml";
-            if (skyboxName != string.Empty && ResourceCache.GetMaterial("skyboxes/" + skyboxName, false) != null)
-            {
-                var skybox = RootScene.CreateChild("Sky").CreateComponent<Skybox>();
-                skybox.Model = Urho.CoreAssets.Models.Box;
-                skybox.Material = ResourceCache.GetMaterial("skyboxes/" + skyboxName, false);
-            }
-
-            SetupDisplay();
-
-            PlayerNode = RootScene.CreateChild("local_player");
-            PlayerNode.Position = new Vector3(0, 0, 0);
-
-            var avatarNode = PlayerNode.CreateChild("avatar");
-            var avatarModel = avatarNode.CreateComponent<StaticModel>();
-            avatarModel.Model = Urho.CoreAssets.Models.Sphere;
-            avatarModel.Material = Urho.CoreAssets.Materials.DefaultGrey;
-
-            avatarNode.Position = new Vector3(0,0.5f,0);
-
-            CameraNode.Parent = avatarNode;
-            CameraNode.Position = new Vector3(0, 1.5f, -2);
-
             new WorldBuilder.FlatBuilder().Build(string.Empty, null, Map);
             //new WorldBuilder.FlatBuilder().BuildSimple(string.Empty, null, Map);
 
+            SetupCamera();
+
+            PlayerNode = RootScene.CreateChild("local_player");
+            PlayerNode.AddComponent(new PlayerAvatarController() { TheWorld = Map, CameraNode = CameraNode.GetComponent<Camera>() });
+
+            SetupSky(Map.Info.SunPosition.X, Map.Info.SunPosition.Y, Map.Info.SunPosition.Z);
 
             float d = Map.DropDepth(PlayerNode.Position.X, PlayerNode.Position.Z);
             if (d != float.MinValue)
@@ -88,66 +127,43 @@ namespace GridWorld.Test
 
                     texture.RuntimeMat = mat;
                 }
-                    
             }
 
             foreach (var cluster in Map.Clusters)
             {
-                var clusterData = cluster.Value;
-
                 var clusterNode = RootScene.CreateChild("Cluster" + cluster.Key.ToString());
-                clusterNode.Position = new Vector3(cluster.Key.H, 0, cluster.Key.V);
-                clusterNode.SetScale(1);
-                ClusterGeometry.BuildGeometry(Map, clusterData);
-
-                if (clusterData.Geometry != null)
-                {
-                    var geos = clusterData.Geometry.BindToUrhoGeo();
-                   
-                    var model = clusterNode.CreateComponent<StaticModel>();
-
-                    var meshGroup = new Model();
-                    int index = 0;
-                    meshGroup.NumGeometries = (uint)geos.Count;
-
-                    foreach (var geo in geos)
-                    {
-                        meshGroup.SetGeometry((uint)index, 0, geo.Item1);
-                        meshGroup.SetGeometryCenter((uint)index, Vector3.Zero);
-                        index++;
-                    }
-
-                    meshGroup.BoundingBox = new BoundingBox(new Vector3(0,0,0),new Vector3(Cluster.HVSize,Cluster.DSize,Cluster.HVSize));
-                    model.Model = meshGroup;
-
-                    index = 0;
-                    foreach (var geo in geos)
-                    {
-                        model.SetMaterial((uint)index, Map.Info.Textures[geo.Item2].RuntimeMat);
-                        index++;
-                    }
-                    model.CastShadows = true;
-                }
-                else
-                {
-                    cluster.Value.DoForEachBlock((pos, block) =>
-                    {
-                        if (block.DefID >= 0)
-                        {
-                            var node = clusterNode.CreateChild("test");
-                            var model = node.CreateComponent<StaticModel>();
-                            model.Model = Urho.CoreAssets.Models.Box;
-                            model.Material = Urho.CoreAssets.Materials.DefaultGrey;
-
-                            node.Position = pos;
-                            node.Scale = new Vector3(1, 1, 1);
-                        }
-                    });
-                }
+                clusterNode.AddComponent(new ClusterInfo(cluster.Value, Map));
             }
         }
 
-        public void SetupDisplay()
+        public void SetupSky(float sunPosX, float sunPosY, float sunPosZ)
+        {
+            Node lightNode = RootScene.CreateChild("SunLight");
+
+            Vector3 sunVec = new Vector3(-sunPosX, -sunPosY, -sunPosZ);
+            sunVec.Normalize();
+
+            lightNode.SetDirection(sunVec);
+            Light light = lightNode.CreateComponent<Light>();
+            light.LightType = LightType.Directional;
+            light.CastShadows = true;
+            light.ShadowBias = new BiasParameters(0.00025f, 0.5f);
+            // Set cascade splits at 10, 50 and 200 world units, fade shadows out at 80% of maximum shadow distance
+            light.ShadowCascade = new CascadeParameters(10.0f, 50.0f, 200.0f, 0.0f, 0.8f);
+
+
+            string skyboxName = "clouds.xml";
+            if (skyboxName != string.Empty && ResourceCache.GetMaterial("skyboxes/" + skyboxName, false) != null)
+            {
+                var skybox = RootScene.CreateChild("Sky").CreateComponent<Skybox>();
+                skybox.Model = Urho.CoreAssets.Models.Box;
+                skybox.Material = ResourceCache.GetMaterial("skyboxes/" + skyboxName, false);
+            }
+            var sun = RootScene.CreateChild("Sun");
+            sun.AddComponent(new Sun() { CameraNode = CameraNode});
+        }
+
+        public void SetupCamera()
         {
             CameraNode = RootScene.CreateChild("Camera");
             CameraNode.Position = (new Vector3(0.0f, 25, -10));
@@ -162,76 +178,27 @@ namespace GridWorld.Test
             zone.FogColor = Color.Transparent;
             zone.FogStart = 50000;
             zone.FogEnd = 50000;
-            zone.AmbientColor = new Color(0.35f, 0.35f, 0.35f, 1);
+            zone.AmbientColor = AmbientColor;
 
             var graphics = Graphics;
             camera.OrthoSize = (float)graphics.Height * PixelSize;
 
-            Node lightNode = RootScene.CreateChild("DirectionalLight");
-            lightNode.SetDirection(new Vector3(0.6f, -1.0f, 0.8f));
-            Light light = lightNode.CreateComponent<Light>();
-            light.LightType = LightType.Directional;
-            light.CastShadows = true;
-            light.ShadowBias = new BiasParameters(0.00025f, 0.5f);
-            // Set cascade splits at 10, 50 and 200 world units, fade shadows out at 80% of maximum shadow distance
-            light.ShadowCascade = new CascadeParameters(10.0f, 50.0f, 200.0f, 0.0f, 0.8f);
-
-
             Renderer.SetViewport(0, new Viewport(Context, RootScene, camera, null));
+        }
 
+        public void SetupRenderer()
+        {
+            int shadowMapBase = 16;
+            Renderer.ShadowQuality = ShadowQuality.PcfN24Bit;
+            Renderer.ShadowMapSize = (shadowMapBase) * 1024;
         }
 
         protected override void OnUpdate(float timeStep)
         {
-            float moveSpeed = 10;
+            if (Exiting)
+                return;
 
-            if (Input.GetKeyDown(Key.W))
-                PlayerNode.Translate(PlayerNode.Direction * (timeStep * moveSpeed), TransformSpace.World);
-            else if (Input.GetKeyDown(Key.S))
-                PlayerNode.Translate(PlayerNode.Direction * (timeStep * -moveSpeed), TransformSpace.World);
-
-            //             if (Input.GetKeyDown(Key.R))
-            //                 CameraNode.Translate(CameraNode.Up * timeStep * moveSpeed, TransformSpace.World);
-            //             else if (Input.GetKeyDown(Key.V))
-            //                 CameraNode.Translate(CameraNode.Up * timeStep * -moveSpeed, TransformSpace.World);
-
-          
-    
-
-            if (Input.GetKeyDown(Key.A))
-                PlayerNode.Translate(PlayerNode.Right * timeStep * -moveSpeed, TransformSpace.World);
-            else if (Input.GetKeyDown(Key.D))
-                PlayerNode.Translate(PlayerNode.Right * timeStep * moveSpeed, TransformSpace.World);
-
-
-            float rotSpeed = 60;
-            float rotDelta = 0;
-            if (Input.GetKeyDown(Key.Q))
-                rotDelta = timeStep * -rotSpeed;
-            else if (Input.GetKeyDown(Key.E))
-                rotDelta = timeStep * rotSpeed;
-
-            Quaternion q = Quaternion.FromAxisAngle(Vector3.UnitY, rotDelta);
-            PlayerNode.Rotate(q);
-
-            if (Input.MouseMoveWheel != 0)
-            {
-                CameraNode.Translate(CameraNode.Direction * (0.125f * Input.MouseMoveWheel), TransformSpace.Local);
-            }
-
-            rotDelta = 0;
-            if (Input.GetKeyDown(Key.T))
-                rotDelta = timeStep * -rotSpeed;
-            else if (Input.GetKeyDown(Key.B))
-                rotDelta = timeStep * rotSpeed;
-
-            q = Quaternion.FromAxisAngle(Vector3.UnitX, rotDelta);
-            CameraNode.Parent.Rotate(q,TransformSpace.Parent);
-
-
-            float d = Map.DropDepth(PlayerNode.Position.X, PlayerNode.Position.Z);
-            if (d != float.MinValue)
-                PlayerNode.Position = new Vector3(PlayerNode.Position.X, d, PlayerNode.Position.Z);
+            base.OnUpdate(timeStep);
         }
     }
 }

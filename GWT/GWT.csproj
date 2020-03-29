@@ -54,6 +54,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Components\ClusterInfo.cs" />
+    <Compile Include="Components\PlayerAvatarController.cs" />
+    <Compile Include="Components\Sun.cs" />
     <Compile Include="GameApp.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
