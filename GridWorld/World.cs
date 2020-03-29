@@ -36,6 +36,8 @@ namespace GridWorld
             public TextureInfo(string name)
             {
                 FileName = name;
+                HCount = 1;
+                VCount = 1;
             }
 
             public TextureInfo(string name, int h, int v)
@@ -50,6 +52,10 @@ namespace GridWorld
 
             [XmlIgnore]
             public int End = -1;
+
+
+            [XmlIgnore]
+            public Urho.Material RuntimeMat = null;
         }
 
         public class WorldInfo
@@ -502,8 +508,8 @@ namespace GridWorld
             int x = (int)positionH - pos.H;
             int y = (int)positionV - pos.V;
 
-            float blockH = positionH - x;
-            float blockV = positionV - y;
+            float blockH = positionH - pos.H;
+            float blockV = positionV - pos.V;
 
             for (int d = Cluster.DSize - 1; d >= 0; d--)
             {

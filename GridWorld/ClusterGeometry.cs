@@ -130,6 +130,79 @@ namespace GridWorld
             return ClusterGeometry.Empty;
         }
 
+        private Tuple<Urho.Geometry, int> GetMeshData(MeshGroup mesh)
+        {
+            VertexBuffer buffer = new VertexBuffer(Application.Current.Context);
+            List<VertexBuffer.PositionNormalColorTexcoord> verts = new List<VertexBuffer.PositionNormalColorTexcoord>();
+
+            IndexBuffer indexes = new IndexBuffer(Application.Current.Context);
+
+            List<short> indexData = new List<short>();
+            // add geo
+
+            uint white = Urho.Color.White.ToUInt();
+
+            Vector3 localOrigin = new Vector3(ClusterOrigin.H, 0, ClusterOrigin.V);
+
+
+            short vIndex = 0;
+            foreach (var face in mesh.Faces)
+            {
+                Vector3 normal = face.Normal;
+                indexData.Add(vIndex); vIndex++;
+                verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[2] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[2] });
+
+                indexData.Add(vIndex); vIndex++;
+                verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[1] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[1] });
+
+                indexData.Add(vIndex); vIndex++;
+                verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[0] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[0] });
+
+                if (face.Verts.Length == 4)
+                {
+                    indexData.Add(vIndex); vIndex++;
+                    if (face.UVs.Length == 3)
+                        verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[3] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[2] });
+                    else
+                        verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[3] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[3] });
+
+                    indexData.Add(vIndex); vIndex++;
+                    verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[2] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[2] });
+
+                    indexData.Add(vIndex); vIndex++;
+                    verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[0] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[0] });
+                }
+            }
+
+            buffer.Shadowed = true;
+
+            buffer.SetSize((uint)verts.Count, ElementMask.Position | ElementMask.Normal | ElementMask.Color | ElementMask.TexCoord1, false);
+            buffer.SetData(verts.ToArray());
+
+            indexes.Shadowed = true;
+            indexes.SetSize((uint)indexData.Count, false);
+            indexes.SetData(indexData.ToArray());
+
+            Urho.Geometry geo = new Urho.Geometry();
+            geo.SetVertexBuffer(0, buffer);
+            geo.IndexBuffer = indexes;
+            geo.SetDrawRange(PrimitiveType.TriangleList, 0, (uint)verts.Count);
+
+            return new Tuple<Geometry, int>(geo, mesh.TextureID);
+        }
+
+        public List<Tuple<Urho.Geometry, int>> BindToUrhoGeo()
+        {
+            List<Tuple<Urho.Geometry, int>> geoList = new List<Tuple<Urho.Geometry, int>>();
+            foreach (var mesh in MeshList)
+                geoList.Add(GetMeshData(mesh));
+
+            foreach (var mesh in TransperantMeshList)
+                geoList.Add(GetMeshData(mesh));
+
+            return geoList;
+        }
+
         public static void BuildGeometry(World world)
         {
             GeometryBuilder geoBuilder = new GeometryBuilder(world);
@@ -239,15 +312,15 @@ namespace GridWorld
                 int imageY = imageOffset / info.HCount;
                 int imageX = imageOffset - imageY * info.HCount;
 
-                float imageGirdX = 1.0f / info.HCount;
-                float imageGirdY = 1.0f / info.VCount;
+                double imageGirdX = 1.0 / info.HCount;
+                double imageGirdY = 1.0 / info.VCount;
 
                 Vector2[] ret = new Vector2[4] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) };
                 //           return ret;
-                ret[0] = new Vector2(imageX * imageGirdX, imageY * imageGirdY);
-                ret[1] = new Vector2(imageX * imageGirdX + imageGirdX, imageY * imageGirdY);
-                ret[2] = new Vector2(imageX * imageGirdX + imageGirdX, imageY * imageGirdY + imageGirdY);
-                ret[3] = new Vector2(imageX * imageGirdX, imageY * imageGirdY + imageGirdY);
+                ret[0] = new Vector2((float)(imageX * imageGirdX), (float)(imageY * imageGirdY));
+                ret[1] = new Vector2((float)(imageX * imageGirdX) + (float)(imageGirdX), (float)(imageY * imageGirdY));
+                ret[2] = new Vector2((float)(imageX * imageGirdX) + (float)(imageGirdX), (float)(imageY * imageGirdY) + (float)(imageGirdY));
+                ret[3] = new Vector2((float)(imageX * imageGirdX), (float)(imageY * imageGirdY) + (float)(imageGirdY));
 
                 return ret;
             }
@@ -276,7 +349,7 @@ namespace GridWorld
 
                     case Cluster.Block.Geometry.Solid:
                     case Cluster.Block.Geometry.HalfUpper:
-                        face.Normal = Vector3.UnitZ;
+                        face.Normal = Vector3.UnitY;
                         face.Verts[0] = new Vector3(h, d + 1, v);
                         face.Verts[1] = new Vector3(h + 1, d + 1, v);
                         face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
@@ -284,7 +357,7 @@ namespace GridWorld
                         break;
 
                     case Cluster.Block.Geometry.HalfLower:
-                        face.Normal = Vector3.UnitZ;
+                        face.Normal = Vector3.UnitY;
                         face.Verts[0] = new Vector3(h, d + 0.5f, v);
                         face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
                         face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
@@ -292,7 +365,7 @@ namespace GridWorld
                         break;
 
                     case Cluster.Block.Geometry.Fluid:
-                        face.Normal = Vector3.UnitZ;
+                        face.Normal = Vector3.UnitY;
                         face.Verts[0] = new Vector3(h, d + 0.95f, v);
                         face.Verts[1] = new Vector3(h + 1, d + 0.95f, v);
                         face.Verts[2] = new Vector3(h + 1, d + 0.95f, v + 1);
@@ -865,24 +938,24 @@ namespace GridWorld
                 // for multi light add code to collide with every light in radius (build non graphic octree?) and add lumens;
                 float offset = 0.01f;
 
-                for (int i = 0; i < 4; i++)
-                {
-                    Vector3 newVec = face.Verts[i] + (face.Normal * offset);
-
-                    Vector3 SunVec = world.Info.SunPosition - newVec;
-                    SunVec.Normalize();
-
-                    float dot = Vector3.Dot(face.Normal, SunVec);
-                    if (dot >= 0)
-                    {
-                        if (world.LineCollidesWithWorld(newVec, world.Info.SunPosition).Collided)
-                            face.Luminance[i] = world.Info.Ambient;
-                        else
-                            face.Luminance[i] = world.Info.SunLuminance;
-                    }
-                    else
-                        face.Luminance[i] = 1;// world.Info.Ambient;
-                }
+//                 for (int i = 0; i < 4; i++)
+//                 {
+//                     Vector3 newVec = face.Verts[i] + (face.Normal * offset);
+// 
+//                     Vector3 SunVec = world.Info.SunPosition - newVec;
+//                     SunVec.Normalize();
+// 
+//                     float dot = Vector3.Dot(face.Normal, SunVec);
+//                     if (dot >= 0)
+//                     {
+//                         if (world.LineCollidesWithWorld(newVec, world.Info.SunPosition).Collided)
+//                             face.Luminance[i] = world.Info.Ambient;
+//                         else
+//                             face.Luminance[i] = world.Info.SunLuminance;
+//                     }
+//                     else
+//                         face.Luminance[i] = 1;// world.Info.Ambient;
+//                 }
 
                 return face;
             }

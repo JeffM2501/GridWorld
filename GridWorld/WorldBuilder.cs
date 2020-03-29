@@ -64,17 +64,22 @@ namespace GridWorld
             public static int Grass = World.BlockDef.EmptyID;
             public static int Water = World.BlockDef.EmptyID;
 
-            public static void InitMCBlocks(World world)
+            public static void InitStandardBlocks(World world)
             {
-                world.Info.Textures.Add(new World.TextureInfo("textures/spritesheet_tiles.png", 8, 16));
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/dirt.png"));
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/stone.png"));
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/grass_top.png"));
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/dirt_grass.png"));
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/water_trans.xml"));
+                //    world.Info.Textures.Add(new World.TextureInfo("data/textures/spritesheet_tiles.png", 8, 16));
                 //world.Info.Textures.Add(new World.TextureInfo("world/grid.png",1,1));
                 if (Dirt != World.BlockDef.EmptyID)
                     return;
 
-                Dirt = world.AddBlockDef(new World.BlockDef("Dirt", 13));
-                Stone = world.AddBlockDef(new World.BlockDef("Stone", 4));
-                Grass = world.AddBlockDef(new World.BlockDef("Grass", 67, 6, 14));
-                Water = world.AddBlockDef(new World.BlockDef("Water", 64));
+                Dirt = world.AddBlockDef(new World.BlockDef("Dirt", 0));
+                Stone = world.AddBlockDef(new World.BlockDef("Stone", 1));
+                Grass = world.AddBlockDef(new World.BlockDef("Grass", 2, 3, 0));
+                Water = world.AddBlockDef(new World.BlockDef("Water", 4));
 
                 world.BlockDefs[Water].Transperant = true;
             }
@@ -159,10 +164,35 @@ namespace GridWorld
 
             public override void Build(string name, string[] paramaters, World world)
             {
-                InitMCBlocks(world);
+                InitStandardBlocks(world);
 
-                int HCount = 2;
-                int VCount = 2;
+                int HCount = 5;
+                int VCount = 5;
+
+                int hMin = HCount / -2;
+                int hMax = HCount + hMin;
+
+                int vMin = VCount / -2;
+                int vMax = VCount + vMin;
+
+                for (int h = hMin; h < hMax; h++)
+                {
+                    for (int v = vMin; v < vMax; v++)
+                    {
+                        Cluster newCluster = new Cluster();
+                        newCluster.Origin = new Cluster.ClusterPos(h * Cluster.HVSize, v * Cluster.HVSize);
+                        AddCrapToCluster(newCluster);
+                        world.Clusters.Add(newCluster.Origin, newCluster);
+                    }
+                }
+            }
+
+            public void BuildSimple(string name, string[] paramaters, World world)
+            {
+                InitStandardBlocks(world);
+
+                int HCount = 1;
+                int VCount = 1;
 
                 for (int h = 0; h < HCount; h++)
                 {
@@ -170,7 +200,7 @@ namespace GridWorld
                     {
                         Cluster newCluster = new Cluster();
                         newCluster.Origin = new Cluster.ClusterPos(h * Cluster.HVSize, v * Cluster.HVSize);
-                        AddCrapToCluster(newCluster);
+                        newCluster.SetBlockRelative(Cluster.HVSize/2, Cluster.HVSize/2, Cluster.DSize/2, new Cluster.Block(Water, Cluster.Block.Geometry.Solid));
                         world.Clusters.Add(newCluster.Origin, newCluster);
                     }
                 }
