@@ -62,6 +62,27 @@ namespace GridWorld.Test
             SetupDisplay();
 
             new WorldBuilder.FlatBuilder().Build(string.Empty, null, Map);
+            //new WorldBuilder.FlatBuilder().BuildSimple(string.Empty, null, Map);
+
+
+            float d = Map.DropDepth(CameraNode.Position.X, CameraNode.Position.Z);
+            if (d != float.MinValue)
+                CameraNode.Position = new Vector3(CameraNode.Position.X, d + 1, CameraNode.Position.Z);
+
+            foreach (var texture in Map.Info.Textures)
+            {
+                if (texture.RuntimeMat == null)
+                {
+                    Material mat = null;
+                    if (System.IO.Path.GetExtension(texture.FileName).ToUpperInvariant() == ".XML")
+                        mat = ResourceCache.GetMaterial(texture.FileName);
+                    else
+                        mat = Material.FromImage(texture.FileName);
+
+                    texture.RuntimeMat = mat;
+                }
+                    
+            }
 
             foreach (var cluster in Map.Clusters)
             {
@@ -69,19 +90,40 @@ namespace GridWorld.Test
 
                 var clusterNode = RootScene.CreateChild("test");
                 clusterNode.Position = new Vector3(cluster.Key.H, 0, cluster.Key.V);
-
+                clusterNode.SetScale(1);
                 ClusterGeometry.BuildGeometry(Map, clusterData);
 
                 if (clusterData.Geometry != null)
                 {
-                    foreach (var mesh in clusterData.Geometry.MeshList)
+                    var geos = clusterData.Geometry.BindToUrhoGeo();
+                   
+                    var model = clusterNode.CreateComponent<StaticModel>();
+
+                    var meshGroup = new Model();
+                    int index = 0;
+                    meshGroup.NumGeometries = (uint)geos.Count;
+
+                    foreach (var geo in geos)
                     {
-              
+                        meshGroup.SetGeometry((uint)index, 0, geo.Item1);
+                        meshGroup.SetGeometryCenter((uint)index, Vector3.Zero);
+                        index++;
                     }
+
+                    meshGroup.BoundingBox = new BoundingBox(new Vector3(0,0,0),new Vector3(Cluster.HVSize,Cluster.DSize,Cluster.HVSize));
+                    model.Model = meshGroup;
+
+                    index = 0;
+                    foreach (var geo in geos)
+                    {
+                        model.SetMaterial((uint)index, Map.Info.Textures[geo.Item2].RuntimeMat);
+                        index++;
+                    }
+                    model.CastShadows = true;
                 }
                 else
                 {
-                    cluster.Value.DoForEachBlock((x, y, z, block) =>
+                    cluster.Value.DoForEachBlock((pos, block) =>
                     {
                         if (block.DefID >= 0)
                         {
@@ -90,7 +132,7 @@ namespace GridWorld.Test
                             model.Model = Urho.CoreAssets.Models.Box;
                             model.Material = Urho.CoreAssets.Materials.DefaultGrey;
 
-                            node.Position = new Vector3(x, z, y);
+                            node.Position = pos;
                             node.Scale = new Vector3(1, 1, 1);
                         }
                     });
@@ -134,7 +176,7 @@ namespace GridWorld.Test
 
         protected override void OnUpdate(float timeStep)
         {
-            float moveSpeed = 50;
+            float moveSpeed = 10;
 
             if (Input.GetKeyDown(Key.W))
                 CameraNode.Translate(CameraNode.Direction * (timeStep * moveSpeed), TransformSpace.World);
@@ -153,20 +195,21 @@ namespace GridWorld.Test
                 CameraNode.Translate(CameraNode.Right * timeStep * moveSpeed, TransformSpace.World);
 
 
+            float rotSpeed = 60;
             float rotDelta = 0;
             if (Input.GetKeyDown(Key.Q))
-                rotDelta = timeStep * -180;
+                rotDelta = timeStep * -rotSpeed;
             else if (Input.GetKeyDown(Key.E))
-                rotDelta = timeStep * 180;
+                rotDelta = timeStep * rotSpeed;
 
             Quaternion q = Quaternion.FromAxisAngle(Vector3.UnitY, rotDelta);
             CameraNode.Rotate(q);
 
             rotDelta = 0;
-            if (Input.GetKeyDown(Key.R))
-                rotDelta = timeStep * -180;
-            else if (Input.GetKeyDown(Key.V))
-                rotDelta = timeStep * 180;
+            if (Input.GetKeyDown(Key.T))
+                rotDelta = timeStep * -rotSpeed;
+            else if (Input.GetKeyDown(Key.B))
+                rotDelta = timeStep * rotSpeed;
 
             q = Quaternion.FromAxisAngle(Vector3.UnitX, rotDelta);
             CameraNode.Rotate(q);

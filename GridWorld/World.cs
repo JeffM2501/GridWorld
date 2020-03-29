@@ -28,21 +28,23 @@ namespace GridWorld
             }
 
             public string FileName = string.Empty;
-            public int XCount = 16;
-            public int YCount = 16;
+            public int HCount = 16;
+            public int VCount = 16;
 
             public TextureInfo() { }
 
             public TextureInfo(string name)
             {
                 FileName = name;
+                HCount = 1;
+                VCount = 1;
             }
 
-            public TextureInfo(string name, int x, int y)
+            public TextureInfo(string name, int h, int v)
             {
                 FileName = name;
-                XCount = x;
-                YCount = y;
+                HCount = h;
+                VCount = v;
             }
 
             [XmlIgnore]
@@ -50,6 +52,10 @@ namespace GridWorld
 
             [XmlIgnore]
             public int End = -1;
+
+
+            [XmlIgnore]
+            public Urho.Material RuntimeMat = null;
         }
 
         public class WorldInfo
@@ -59,7 +65,7 @@ namespace GridWorld
             public string Author = string.Empty;
             public string Site = string.Empty;
 
-            public Vector3 SunPosition = new Vector3(200, 100, 150);
+            public Vector3 SunPosition = new Vector3(200, 150, 100);
             public float Ambient = 0.5f;
             public float SunLuminance = 1.0f;
         }
@@ -74,7 +80,7 @@ namespace GridWorld
             foreach (TextureInfo info in Info.Textures)
             {
                 info.Start = count;
-                count += info.XCount * info.YCount;
+                count += info.HCount * info.VCount;
                 info.End = count - 1;
             }
         }
@@ -406,9 +412,9 @@ namespace GridWorld
         protected int AxisToGrid(int value)
         {
             if (value >= 0)
-                return (value / Cluster.XYSize) * Cluster.XYSize;
+                return (value / Cluster.HVSize) * Cluster.HVSize;
 
-            return ((value - Cluster.XYSize) / Cluster.XYSize) * Cluster.XYSize;
+            return ((value - Cluster.HVSize) / Cluster.HVSize) * Cluster.HVSize;
         }
 
         public static Vector3 PositionToBlock(Vector3 pos)
@@ -416,34 +422,34 @@ namespace GridWorld
             return new Vector3((float)Math.Floor(pos.X), (float)Math.Floor(pos.Y), (float)Math.Floor(pos.Z));
         }
 
-        public Cluster.Block BlockFromPosition(int x, int y, int z)
+        public Cluster.Block BlockFromPosition(int h, int v, int d)
         {
-            if (z >= Cluster.ZSize || z < 0)
+            if (d >= Cluster.DSize || d < 0)
                 return Cluster.Block.Invalid;
 
-            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid(x), AxisToGrid(y));
+            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid(h), AxisToGrid(v));
 
             if (!Clusters.ContainsKey(pos))
                 return Cluster.Block.Invalid;
 
-            return Clusters[pos].GetBlockAbs(x, y, z);
+            return Clusters[pos].GetBlockAbs(h, v, d);
         }
 
-        public Cluster.Block BlockFromPosition(float x, float y, float z)
+        public Cluster.Block BlockFromPosition(float h, float v, float d)
         {
-            return BlockFromPosition((int)x, (int)y, (int)z);
+            return BlockFromPosition((int)h, (int)v, (int)d);
         }
 
         public Cluster.Block BlockFromPosition(Vector3 pos)
         {
-            return BlockFromPosition((int)pos.X, (int)pos.Y, (int)pos.Z);
+            return BlockFromPosition((int)pos.X, (int)pos.Z, (int)pos.Y);
         }
 
-        public Cluster ClusterFromPosition(int x, int y, int z)
+        public Cluster ClusterFromPosition(int h, int v, int d)
         {
-            if (z >= Cluster.ZSize || z < 0)
+            if (d >= Cluster.DSize || d < 0)
                 return null;
-            return ClusterFromPosition(new Cluster.ClusterPos(AxisToGrid(x), AxisToGrid(y)));
+            return ClusterFromPosition(new Cluster.ClusterPos(AxisToGrid(h), AxisToGrid(v)));
         }
 
         public Cluster ClusterFromPosition(Cluster.ClusterPos pos)
@@ -454,32 +460,32 @@ namespace GridWorld
             return Clusters[pos];
         }
 
-        public Cluster ClusterFromPosition(float x, float y, float z)
+        public Cluster ClusterFromPosition(float h, float v, float d)
         {
-            return ClusterFromPosition((int)x, (int)y, (int)z);
+            return ClusterFromPosition((int)h, (int)v, (int)d);
         }
 
         public Cluster ClusterFromPosition(Vector3 pos)
         {
-            return ClusterFromPosition((int)pos.X, (int)pos.Y, (int)pos.Z);
+            return ClusterFromPosition((int)pos.X, (int)pos.Z, (int)pos.Y);
         }
 
-        public bool PositionIsOffMap(float x, float y, float z)
+        public bool PositionIsOffMap(float h, float v, float d)
         {
-            return PositionIsOffMap((int)x, (int)y, (int)z);
+            return PositionIsOffMap((int)h, (int)v, (int)d);
         }
 
         public bool PositionIsOffMap(Vector3 pos)
         {
-            return PositionIsOffMap((int)pos.X, (int)pos.Y, (int)pos.Z);
+            return PositionIsOffMap((int)pos.X, (int)pos.Z, (int)pos.Y);
         }
 
-        public bool PositionIsOffMap(int x, int y, int z)
+        public bool PositionIsOffMap(int h, int v, int d)
         {
-            if (z >= Cluster.ZSize || z < 0)
+            if (d >= Cluster.DSize || d < 0)
                 return true;
 
-            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid(x), AxisToGrid(y));
+            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid(h), AxisToGrid(v));
 
             if (!Clusters.ContainsKey(pos))
                 return true;
@@ -492,24 +498,24 @@ namespace GridWorld
             return DropDepth(position.X, position.Y);
         }
 
-        public float DropDepth(float positionX, float positionY)
+        public float DropDepth(float positionH, float positionV)
         {
-            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid((int)positionX), AxisToGrid((int)positionY));
+            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid((int)positionH), AxisToGrid((int)positionV));
             if (!Clusters.ContainsKey(pos))
                 return float.MinValue;
 
             Cluster c = Clusters[pos];
-            int x = (int)positionX - pos.H;
-            int y = (int)positionY - pos.V;
+            int x = (int)positionH - pos.H;
+            int y = (int)positionV - pos.V;
 
-            float blockX = positionX - x;
-            float blockY = positionY - y;
+            float blockH = positionH - pos.H;
+            float blockV = positionV - pos.V;
 
-            for (int z = Cluster.ZSize - 1; z >= 0; z--)
+            for (int d = Cluster.DSize - 1; d >= 0; d--)
             {
-                float value = c.GetBlockRelative(x, y, z).GetZForLocalPosition(blockX, blockY);
+                float value = c.GetBlockRelative(x, y, d).GetDForLocalPosition(blockH, blockV);
                 if (value != float.MinValue)
-                    return z + value;
+                    return d + value;
             }
 
             return float.MinValue;
@@ -525,7 +531,7 @@ namespace GridWorld
             if (CollisionPlanes.Count != 0)
                 return;
 
-            Vector3 vec = new Vector3(0, -1, 1);
+            Vector3 vec = new Vector3(0, 1, -1);
             vec.Normalize();
 
             CollisionPlanes.Add(Cluster.Block.Geometry.NorthFullRamp, new Plane(new Vector4(vec, 0)));
@@ -534,45 +540,45 @@ namespace GridWorld
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.SouthFullRamp, new Plane(new Vector4(vec, 1)));
 
-            vec = new Vector3(-1, 0, 1);
+            vec = new Vector3(-1, 1, 0);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.EastFullRamp, new Plane(new Vector4(vec, 0)));
 
-            vec = new Vector3(1, 0, 1);
+            vec = new Vector3(1, 1, 0);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.WestFullRamp, new Plane(new Vector4(vec, 1)));
 
 
-            vec = new Vector3(0, -0.5f, 1);
+            vec = new Vector3(0, 1, -0.5f);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.NorthHalfLowerRamp, new Plane(new Vector4(vec, 0)));
 
-            vec = new Vector3(0, 0.5f, 1);
+            vec = new Vector3(0, 1, 0.5f);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.SouthHalfLowerRamp, new Plane(new Vector4(vec, 0.5f)));
 
-            vec = new Vector3(-0.5f, 0, 1);
+            vec = new Vector3(-0.5f, 1, 0);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.EastHalfLowerRamp, new Plane(new Vector4(vec, 0)));
 
-            vec = new Vector3(0.5f, 0, 1);
+            vec = new Vector3(0.5f, 1, 0);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.WestHalfLowerRamp, new Plane(new Vector4(vec, 0.5f)));
 
 
-            vec = new Vector3(0, -0.5f, 1);
+            vec = new Vector3(0, 1, -0.5f);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.NorthHalfUpperRamp, new Plane(new Vector4(vec, 0.5f)));
 
-            vec = new Vector3(0, 0.5f, 1);
+            vec = new Vector3(0, 1, 0.5f);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.SouthHalfUpperRamp, new Plane(new Vector4(vec, 1)));
 
-            vec = new Vector3(-0.5f, 0, 1);
+            vec = new Vector3(-0.5f, 1, 0);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.EastHalfUpperRamp, new Plane(new Vector4(vec, 0.5f)));
 
-            vec = new Vector3(0.5f, 0, 1);
+            vec = new Vector3(0.5f, 1, 0);
             vec.Normalize();
             CollisionPlanes.Add(Cluster.Block.Geometry.WestHalfUpperRamp, new Plane(new Vector4(vec, 1)));
         }
@@ -590,19 +596,19 @@ namespace GridWorld
             if (block.Geom == Cluster.Block.Geometry.Fluid)
                 return true;
 
-            int X = (int)blockPos.X;
-            int Y = (int)blockPos.Y;
-            int Z = (int)blockPos.Z;
+            int H = (int)blockPos.X;
+            int V = (int)blockPos.Z;
+            int D = (int)blockPos.Y;
 
             Vector3 relPos = pos - blockPos;
 
             switch (block.Geom)
             {
                 case Cluster.Block.Geometry.HalfUpper:
-                    return relPos.Z < 0.5f;
+                    return relPos.Y < 0.5f;
 
                 case Cluster.Block.Geometry.HalfLower:
-                    return relPos.Z >= 0.5f;
+                    return relPos.Y >= 0.5f;
             }
 
             Plane plane = CollisionPlanes[block.Geom];
@@ -649,15 +655,15 @@ namespace GridWorld
             delta.Normalize();
             int axis = 0;
             float max = Math.Abs(delta.X);
-            if (Math.Abs(delta.Y) > max)
-            {
-                axis = 1;
-                max = Math.Abs(delta.Y);
-            }
             if (Math.Abs(delta.Z) > max)
             {
                 axis = 2;
                 max = Math.Abs(delta.Z);
+            }
+            if (Math.Abs(delta.Y) > max)
+            {
+                axis = 1;
+                max = Math.Abs(delta.Y);
             }
 
             info.CollidedBlock = BlockFromPosition(start);

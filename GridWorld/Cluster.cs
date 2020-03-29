@@ -48,7 +48,7 @@ namespace GridWorld
                 Geom = geo;
             }
 
-            public float GetZForLocalPosition(float x, float y)
+            public float GetDForLocalPosition(float h, float v)
             {
                 switch (Geom)
                 {
@@ -60,40 +60,40 @@ namespace GridWorld
                         return 0.5f;
 
                     case Cluster.Block.Geometry.NorthFullRamp:
-                        return y;
+                        return v;
 
                     case Cluster.Block.Geometry.SouthFullRamp:
-                        return 1.0f - y;
+                        return 1.0f - v;
 
                     case Cluster.Block.Geometry.EastFullRamp:
-                        return x;
+                        return h;
 
                     case Cluster.Block.Geometry.WestFullRamp:
-                        return 1.0f - x;
+                        return 1.0f - h;
 
                     case Cluster.Block.Geometry.NorthHalfLowerRamp:
-                        return y * 0.5f;
+                        return v * 0.5f;
 
                     case Cluster.Block.Geometry.SouthHalfLowerRamp:
-                        return (1.0f - y) * 0.5f;
+                        return (1.0f - v) * 0.5f;
 
                     case Cluster.Block.Geometry.EastHalfLowerRamp:
-                        return x * 0.5f;
+                        return h * 0.5f;
 
                     case Cluster.Block.Geometry.WestHalfLowerRamp:
-                        return (1.0f - x) * 0.5f;
+                        return (1.0f - h) * 0.5f;
 
                     case Cluster.Block.Geometry.NorthHalfUpperRamp:
-                        return (y * 0.5f) + 0.5f;
+                        return (v * 0.5f) + 0.5f;
 
                     case Cluster.Block.Geometry.SouthHalfUpperRamp:
-                        return ((1.0f - y) * 0.5f) + 0.5f;
+                        return ((1.0f - v) * 0.5f) + 0.5f;
 
                     case Cluster.Block.Geometry.EastHalfUpperRamp:
-                        return (x * 0.5f) + 0.5f;
+                        return (h * 0.5f) + 0.5f;
 
                     case Cluster.Block.Geometry.WestHalfUpperRamp:
-                        return ((1.0f - x) * 0.5f) + 0.5f;
+                        return ((1.0f - h) * 0.5f) + 0.5f;
                 }
 
                 return float.MinValue;
@@ -108,7 +108,7 @@ namespace GridWorld
             {
                 if (_Blocks == null)
                 {
-                    _Blocks = new Block[XYSize * XYSize * ZSize];
+                    _Blocks = new Block[HVSize * HVSize * DSize];
                     for (int i = 0; i < _Blocks.Length; i++)
                         _Blocks[i] = Block.Empty;
                 }
@@ -123,39 +123,39 @@ namespace GridWorld
             Geometry = null;
         }
 
-        public Block GetBlockRelative(int x, int y, int z)
+        public Block GetBlockRelative(int h, int v, int d)
         {
-            return Blocks[(z * XYSize * XYSize) + (y * XYSize) + x];
+            return Blocks[(d * HVSize * HVSize) + (v * HVSize) + h];
         }
 
-        public Block GetBlockAbs(int x, int y, int z)
+        public Block GetBlockAbs(int h, int v, int d)
         {
-            return GetBlockRelative(x - Origin.H, y - Origin.V, z);
+            return GetBlockRelative(h - Origin.H, v - Origin.V, d);
         }
 
-        public void SetBlockRelative(int x, int y, int z, Block block)
+        public void SetBlockRelative(int h, int v, int d, Block block)
         {
-            Blocks[(z * XYSize * XYSize) + (y * XYSize) + x] = block;
+            Blocks[(d * HVSize * HVSize) + (v * HVSize) + h] = block;
         }
 
-        public void SetBlockAbs(int x, int y, int z, Block block)
+        public void SetBlockAbs(int h, int v, int d, Block block)
         {
-            SetBlockRelative(x - Origin.H, y - Origin.V, z, block);
+            SetBlockRelative(h - Origin.H, v - Origin.V, d, block);
         }
 
         public ClusterPos GetPositionRelative(Vector3 vec)
         {
-            return new ClusterPos((int)vec.X - Origin.H, (int)vec.Y - Origin.V);
+            return new ClusterPos((int)vec.X - Origin.H, (int)vec.Z - Origin.V);
         }
 
         public Vector3 GetBlockRelativePostion(int index)
         {
-            int z = index % (XYSize * XYSize);
-            int planeStart = index - (z * (XYSize * XYSize));
-            int y = planeStart % XYSize;
-            int x = index - (y * XYSize);
+            int d = index % (HVSize * HVSize);
+            int planeStart = index - (d * (HVSize * HVSize));
+            int v = planeStart % HVSize;
+            int h = index - (v * HVSize);
 
-            return new Vector3(x, y, z);
+            return new Vector3(h, d, v);
         }
 
         public Vector3 GetBlockRelativePostion(Block block)
@@ -163,8 +163,8 @@ namespace GridWorld
             return GetBlockRelativePostion(Array.IndexOf(Blocks, block));
         }
 
-        public static int XYSize = 32;
-        public static int ZSize = 32;
+        public static int HVSize = 32;
+        public static int DSize = 32;
 
         public class ClusterPos
         {
@@ -208,7 +208,7 @@ namespace GridWorld
                 if (!BoundsValid)
                 {
                     BoundsValid = true;
-                    _Bounds = new BoundingBox(new Vector3(Origin.H, Origin.V, 0), new Vector3(Origin.H + XYSize, Origin.V + XYSize, ZSize));
+                    _Bounds = new BoundingBox(new Vector3(Origin.H, 0, Origin.V), new Vector3(Origin.H + HVSize, DSize, Origin.V + HVSize ));
                 }
 
                 return _Bounds;
@@ -220,19 +220,36 @@ namespace GridWorld
             return Bounds;
         }
 
-        public delegate void BlockCallback(int x, int y, int z, Block block);
+        public delegate void BlockCallback(int h, int v, int d, Block block);
 
         public void DoForEachBlock(BlockCallback callback)
         {
             if (callback == null)
                 return;
 
-            for (int z = 0; z < ZSize; z++)
+            for (int d = 0; d < DSize; d++)
             {
-                for (int y = 0; y < XYSize; y++)
+                for (int v = 0; v < HVSize; v++)
                 {
-                    for (int x = 0; x < Cluster.XYSize; x++)
-                        callback.Invoke(x, y, z, GetBlockRelative(x, y, z));
+                    for (int h = 0; h < Cluster.HVSize; h++)
+                        callback.Invoke(h, v, d, GetBlockRelative(h, v, d));
+                }
+            }
+        }
+
+        public delegate void BlockGeoCallback(Vector3 blockPos, Block block);
+
+        public void DoForEachBlock(BlockGeoCallback callback)
+        {
+            if (callback == null)
+                return;
+
+            for (int d = 0; d < DSize; d++)
+            {
+                for (int v = 0; v < HVSize; v++)
+                {
+                    for (int h = 0; h < Cluster.HVSize; h++)
+                        callback.Invoke(new Vector3(h,d,v), GetBlockRelative(h, v, d));
                 }
             }
         }
