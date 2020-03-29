@@ -64,22 +64,32 @@ namespace GridWorld
             public static int Grass = World.BlockDef.EmptyID;
             public static int Water = World.BlockDef.EmptyID;
 
+            public static int Blue = World.BlockDef.EmptyID;
+            public static int Red = World.BlockDef.EmptyID;
+            public static int Tan = World.BlockDef.EmptyID;
+
             public static void InitStandardBlocks(World world)
             {
-                world.Info.Textures.Add(new World.TextureInfo("data/textures/dirt.png"));
-                world.Info.Textures.Add(new World.TextureInfo("data/textures/stone.png"));
-                world.Info.Textures.Add(new World.TextureInfo("data/textures/grass_top.png"));
-                world.Info.Textures.Add(new World.TextureInfo("data/textures/dirt_grass.png"));
-                world.Info.Textures.Add(new World.TextureInfo("data/textures/water_trans.xml"));
-                //    world.Info.Textures.Add(new World.TextureInfo("data/textures/spritesheet_tiles.png", 8, 16));
-                //world.Info.Textures.Add(new World.TextureInfo("world/grid.png",1,1));
                 if (Dirt != World.BlockDef.EmptyID)
                     return;
+
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/dirt.png"));           //0
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/stone.png"));          //1
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/grass_top.png"));      //2
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/dirt_grass.png"));     //3
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/water_trans.xml"));    //4
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/cotton_blue.png"));    //5
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/cotton_red.png"));     //6
+                world.Info.Textures.Add(new World.TextureInfo("data/textures/cotton_tan.png"));     //7
 
                 Dirt = world.AddBlockDef(new World.BlockDef("Dirt", 0));
                 Stone = world.AddBlockDef(new World.BlockDef("Stone", 1));
                 Grass = world.AddBlockDef(new World.BlockDef("Grass", 2, 3, 0));
                 Water = world.AddBlockDef(new World.BlockDef("Water", 4));
+
+                Blue = world.AddBlockDef(new World.BlockDef("Blue", 5));
+                Red = world.AddBlockDef(new World.BlockDef("Red", 6));
+                Tan = world.AddBlockDef(new World.BlockDef("Tan", 7));
 
                 world.BlockDefs[Water].Transperant = true;
             }
@@ -160,6 +170,15 @@ namespace GridWorld
                 FillAreaWithBlock(newCluster, 20, 15, 22, 16, dLevel - 1, dLevel, Grass, Cluster.Block.Geometry.SouthFullRamp);
 
                 FillAreaWithBlock(newCluster, 25, 20, 28, 30, dLevel, dLevel + 5, Stone, Cluster.Block.Geometry.Solid);
+
+                newCluster.SetBlockRelative(0, 0, dLevel + 4, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(1, 0, dLevel + 4, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(2, 0, dLevel + 4, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(3, 0, dLevel + 4, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+
+                newCluster.SetBlockRelative(0, 1, dLevel + 4, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(0, 2, dLevel + 4, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(0, 3, dLevel + 4, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
             }
 
             public override void Build(string name, string[] paramaters, World world)

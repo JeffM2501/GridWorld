@@ -50,6 +50,12 @@ namespace GridWorld
 
             public float GetDForLocalPosition(float h, float v)
             {
+                if (Geom == Geometry.Empty)
+                    return float.MinValue;
+
+                float invH = 1 - h;
+                float invV = 1 - v;
+
                 switch (Geom)
                 {
                     case Cluster.Block.Geometry.Solid:

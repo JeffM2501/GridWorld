@@ -513,7 +513,7 @@ namespace GridWorld
 
             for (int d = Cluster.DSize - 1; d >= 0; d--)
             {
-                float value = c.GetBlockRelative(x, y, d).GetDForLocalPosition(blockH, blockV);
+                float value = c.GetBlockRelative(x, y, d).GetDForLocalPosition(blockH - x, blockV - y);
                 if (value != float.MinValue)
                     return d + value;
             }

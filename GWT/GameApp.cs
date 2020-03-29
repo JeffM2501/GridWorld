@@ -109,6 +109,9 @@ namespace GridWorld.Test
             PlayerNode = RootScene.CreateChild("local_player");
             PlayerNode.AddComponent(new PlayerAvatarController() { TheWorld = Map, CameraNode = CameraNode.GetComponent<Camera>() });
 
+            var depthTester = RootScene.CreateChild("depth_tester");
+            depthTester.AddComponent(new DepthTester() { TheWorld = Map });
+
             SetupSky(Map.Info.SunPosition.X, Map.Info.SunPosition.Y, Map.Info.SunPosition.Z);
 
             float d = Map.DropDepth(PlayerNode.Position.X, PlayerNode.Position.Z);
