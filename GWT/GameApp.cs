@@ -15,6 +15,10 @@ namespace GridWorld.Test
         public Scene RootScene = null;
         public static Node CameraNode = null;
 
+        Zone GlobalIlluminationZone = null;
+
+        public Node PlayerNode = null;
+
         GridWorld.World Map = new World();
 
 
@@ -41,16 +45,6 @@ namespace GridWorld.Test
 
             RootScene.CreateComponent<DebugRenderer>();
 
-
-//             var node = RootScene.CreateChild("test");
-//             var model = node.CreateComponent<StaticModel>();
-//             model.Model = Urho.CoreAssets.Models.Box;
-//             model.Material = Urho.CoreAssets.Materials.DefaultGrey;
-// 
-//             node.Position = new Vector3(0, 10, 0);
-//             node.Rotation = new Quaternion(0, 45, 0);
-//             node.Scale = new Vector3(10, 10, 10);
-
             string skyboxName = "hills.xml";
             if (skyboxName != string.Empty && ResourceCache.GetMaterial("skyboxes/" + skyboxName, false) != null)
             {
@@ -61,13 +55,26 @@ namespace GridWorld.Test
 
             SetupDisplay();
 
+            PlayerNode = RootScene.CreateChild("local_player");
+            PlayerNode.Position = new Vector3(0, 0, 0);
+
+            var avatarNode = PlayerNode.CreateChild("avatar");
+            var avatarModel = avatarNode.CreateComponent<StaticModel>();
+            avatarModel.Model = Urho.CoreAssets.Models.Sphere;
+            avatarModel.Material = Urho.CoreAssets.Materials.DefaultGrey;
+
+            avatarNode.Position = new Vector3(0,0.5f,0);
+
+            CameraNode.Parent = avatarNode;
+            CameraNode.Position = new Vector3(0, 1.5f, -2);
+
             new WorldBuilder.FlatBuilder().Build(string.Empty, null, Map);
             //new WorldBuilder.FlatBuilder().BuildSimple(string.Empty, null, Map);
 
 
-            float d = Map.DropDepth(CameraNode.Position.X, CameraNode.Position.Z);
+            float d = Map.DropDepth(PlayerNode.Position.X, PlayerNode.Position.Z);
             if (d != float.MinValue)
-                CameraNode.Position = new Vector3(CameraNode.Position.X, d + 1, CameraNode.Position.Z);
+                PlayerNode.Position = new Vector3(PlayerNode.Position.X, d, PlayerNode.Position.Z);
 
             foreach (var texture in Map.Info.Textures)
             {
@@ -88,7 +95,7 @@ namespace GridWorld.Test
             {
                 var clusterData = cluster.Value;
 
-                var clusterNode = RootScene.CreateChild("test");
+                var clusterNode = RootScene.CreateChild("Cluster" + cluster.Key.ToString());
                 clusterNode.Position = new Vector3(cluster.Key.H, 0, cluster.Key.V);
                 clusterNode.SetScale(1);
                 ClusterGeometry.BuildGeometry(Map, clusterData);
@@ -155,7 +162,7 @@ namespace GridWorld.Test
             zone.FogColor = Color.Transparent;
             zone.FogStart = 50000;
             zone.FogEnd = 50000;
-            zone.AmbientColor = new Color(0.25f, 0.25f, 0.25f, 1);
+            zone.AmbientColor = new Color(0.35f, 0.35f, 0.35f, 1);
 
             var graphics = Graphics;
             camera.OrthoSize = (float)graphics.Height * PixelSize;
@@ -179,20 +186,22 @@ namespace GridWorld.Test
             float moveSpeed = 10;
 
             if (Input.GetKeyDown(Key.W))
-                CameraNode.Translate(CameraNode.Direction * (timeStep * moveSpeed), TransformSpace.World);
+                PlayerNode.Translate(PlayerNode.Direction * (timeStep * moveSpeed), TransformSpace.World);
             else if (Input.GetKeyDown(Key.S))
-                CameraNode.Translate(CameraNode.Direction * (timeStep * -moveSpeed), TransformSpace.World);
+                PlayerNode.Translate(PlayerNode.Direction * (timeStep * -moveSpeed), TransformSpace.World);
 
-            if (Input.GetKeyDown(Key.R))
-                CameraNode.Translate(CameraNode.Up * timeStep * moveSpeed, TransformSpace.World);
-            else if (Input.GetKeyDown(Key.V))
-                CameraNode.Translate(CameraNode.Up * timeStep * -moveSpeed, TransformSpace.World);
+            //             if (Input.GetKeyDown(Key.R))
+            //                 CameraNode.Translate(CameraNode.Up * timeStep * moveSpeed, TransformSpace.World);
+            //             else if (Input.GetKeyDown(Key.V))
+            //                 CameraNode.Translate(CameraNode.Up * timeStep * -moveSpeed, TransformSpace.World);
 
+          
+    
 
             if (Input.GetKeyDown(Key.A))
-                CameraNode.Translate(CameraNode.Right * timeStep * -moveSpeed, TransformSpace.World);
+                PlayerNode.Translate(PlayerNode.Right * timeStep * -moveSpeed, TransformSpace.World);
             else if (Input.GetKeyDown(Key.D))
-                CameraNode.Translate(CameraNode.Right * timeStep * moveSpeed, TransformSpace.World);
+                PlayerNode.Translate(PlayerNode.Right * timeStep * moveSpeed, TransformSpace.World);
 
 
             float rotSpeed = 60;
@@ -203,7 +212,12 @@ namespace GridWorld.Test
                 rotDelta = timeStep * rotSpeed;
 
             Quaternion q = Quaternion.FromAxisAngle(Vector3.UnitY, rotDelta);
-            CameraNode.Rotate(q);
+            PlayerNode.Rotate(q);
+
+            if (Input.MouseMoveWheel != 0)
+            {
+                CameraNode.Translate(CameraNode.Direction * (0.125f * Input.MouseMoveWheel), TransformSpace.Local);
+            }
 
             rotDelta = 0;
             if (Input.GetKeyDown(Key.T))
@@ -212,8 +226,12 @@ namespace GridWorld.Test
                 rotDelta = timeStep * rotSpeed;
 
             q = Quaternion.FromAxisAngle(Vector3.UnitX, rotDelta);
-            CameraNode.Rotate(q);
+            CameraNode.Parent.Rotate(q,TransformSpace.Parent);
 
+
+            float d = Map.DropDepth(PlayerNode.Position.X, PlayerNode.Position.Z);
+            if (d != float.MinValue)
+                PlayerNode.Position = new Vector3(PlayerNode.Position.X, d, PlayerNode.Position.Z);
         }
     }
 }

@@ -1,0 +1,18 @@
+Camera
+Geometry Verification
+Collision Verification
+Material and block shape bitmasks (dir, shape, height, density)
+Runtime Geometry loading
+64 bit cluster indexes
+Moving origin
+3D Cluster indexes
+Procedural Generation
+Dynamic Cluster Loading
+Vertex Shaders for fluids
+Strucutres
+Editing
+Mobs
+Triggers
+Block Sub Meshes
+More block types (half verticals)
+

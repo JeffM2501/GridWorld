@@ -936,7 +936,7 @@ namespace GridWorld
                     return face;
                 // walk each vertex and collide it with the sun
                 // for multi light add code to collide with every light in radius (build non graphic octree?) and add lumens;
-                float offset = 0.01f;
+//                float offset = 0.01f;
 
 //                 for (int i = 0; i < 4; i++)
 //                 {
