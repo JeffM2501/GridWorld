@@ -171,27 +171,38 @@ namespace GridWorld
 
                 FillAreaWithBlock(newCluster, 25, 20, 28, 30, dLevel, dLevel + 5, Stone, Cluster.Block.Geometry.Solid);
 
-                newCluster.SetBlockRelative(0, 0, dLevel + 4, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
-                newCluster.SetBlockRelative(1, 0, dLevel + 4, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
-                newCluster.SetBlockRelative(2, 0, dLevel + 4, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
-                newCluster.SetBlockRelative(3, 0, dLevel + 4, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                int dOffset = 4;
+                if (newCluster.Origin.H == 0 && newCluster.Origin.V == 0)
+                    dOffset = 6;
 
-                newCluster.SetBlockRelative(0, 1, dLevel + 4, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
-                newCluster.SetBlockRelative(0, 2, dLevel + 4, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
-                newCluster.SetBlockRelative(0, 3, dLevel + 4, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(0, 0, dLevel + dOffset, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(1, 0, dLevel + dOffset, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(2, 0, dLevel + dOffset, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(3, 0, dLevel + dOffset, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(3, 0, dLevel + dOffset+1, new Cluster.Block(Blue, Cluster.Block.Geometry.WestFullRamp));
+
+                newCluster.SetBlockRelative(0, 1, dLevel + dOffset, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(0, 2, dLevel + dOffset, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(0, 3, dLevel + dOffset, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(0, 3, dLevel + dOffset + 1, new Cluster.Block(Red, Cluster.Block.Geometry.SouthFullRamp));
             }
 
             public override void Build(string name, string[] paramaters, World world)
             {
                 InitStandardBlocks(world);
 
-                int HCount = 5;
-                int VCount = 5;
+                int HCount = 1;
+                int VCount = 2;
 
-                int hMin = HCount / -2;
+                int hMin = 0;
+                if (HCount > 1)
+                    hMin = HCount / -2;
+
                 int hMax = HCount + hMin;
 
-                int vMin = VCount / -2;
+                int vMin = 0;
+                if (VCount > 1)
+                    vMin = VCount / -2;
                 int vMax = VCount + vMin;
 
                 for (int h = hMin; h < hMax; h++)

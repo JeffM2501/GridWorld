@@ -1,4 +1,5 @@
 *Camera
+*Depth Projection
 Geometry Verification
 Collision Verification
 Material and block shape bitmasks (dir, shape, height, density)
