@@ -10,34 +10,45 @@ namespace GridWorld.Test.Geometry
 {
     public static class GeoLoadManager
     {
-        public static World TheWorld = null;
-
         public delegate void GeoLoadCallback(Cluster theCluster, object tag);
 
-        public static int ForceLoadRadius = 8;
+        public static int ForceLoadRadius = 4;
+
+        private static bool UseThreads = true;
 
         public static void GenerateGeometry(Cluster theCluster, object tag, GeoLoadCallback callback)
         {
-            ThreadPool.QueueUserWorkItem(new WaitCallback(o =>
+            if (UseThreads)
+            {
+                ThreadPool.QueueUserWorkItem(new WaitCallback(o =>
+                {
+                    ClusterGeometry.BuildGeometry(theCluster);
+                    callback?.Invoke(theCluster, tag);
+                }));
+            }
+            else
             {
                 ClusterGeometry.BuildGeometry(theCluster);
                 callback?.Invoke(theCluster, tag);
-            }));
+            }
         }
-
 
         public delegate void CuslterPosCallback(int h, int v);
         public static event CuslterPosCallback NeedCluster = null;
 
-        private static void ForceClusterLoad(Cluster.ClusterPos origin, int h, int v)
+        public static float ClusterZombieTime = 10;
+
+        private static void ForceClusterLoad(ClusterPos origin, int h, int v)
         {
-            var cluster = TheWorld.ClusterFromPosition(origin.Offset(h, v));
+            var cluster = World.ClusterFromPosition(origin.Offset(h, v));
             if (cluster == null)
             {
                 // it's off the current map, flag it for generation, another cycle will pick it up
                 NeedCluster?.Invoke(h, v);
                 return;
             }
+
+            cluster.AliveCount = ClusterZombieTime;
 
             var status = cluster.GetStatus();
             if (status == Cluster.Statuses.Raw || status == Cluster.Statuses.GeometryBound || status == Cluster.Statuses.GeometryPending)
@@ -54,12 +65,11 @@ namespace GridWorld.Test.Geometry
             GeoLoadManager.GenerateGeometry(cluster, null, (c, t) => { LoadLimiter.AddLoadPriority(cluster.Origin); });
         }
 
-        private static void ForceRingLoad(int radius, Cluster.ClusterPos origin)
+        private static void ForceRingLoad(int radius, ClusterPos origin)
         {
             int radUnits = radius * Cluster.HVSize;
             for (int i = 0; i <= radUnits; i+= Cluster.HVSize)
             {
-
                 ForceClusterLoad(origin, radUnits, i);
                 ForceClusterLoad(origin, -radUnits, i);
 
@@ -79,7 +89,7 @@ namespace GridWorld.Test.Geometry
 
         public static void UpdateGeoForPosition(Vector3 cameraPos)
         {
-            var rootCluster = TheWorld.ClusterFromPosition(cameraPos);
+            var rootCluster = World.ClusterFromPosition(cameraPos);
             if (rootCluster == null)
                 return;
 

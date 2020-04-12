@@ -14,8 +14,6 @@ namespace GridWorld.Test.Components
         public Material WarningMaterial = null;
         public Material ErrorMaterial = null;
 
-        public World TheWorld = null;
-
         bool first = true;
 
         public List<StaticModel> Models = new List<StaticModel>();
@@ -73,18 +71,15 @@ namespace GridWorld.Test.Components
             bool warn = false;
             try
             {
-                if (TheWorld != null)
+                float d = World.DropDepth(Node.Position.X, Node.Position.Z);
+                if (d == float.MinValue)
+                    good = false;
+                else
                 {
-                    float d = TheWorld.DropDepth(Node.Position.X, Node.Position.Z);
-                    if (d == float.MinValue)
-                        good = false;
+                    if (!first && Math.Abs(d - Node.Position.Y) > 10)
+                        warn = true;
                     else
-                    {
-                        if (!first && Math.Abs(d - Node.Position.Y) > 10)
-                            warn = true;
-                        else
-                            Node.Position = new Vector3(Node.Position.X, d, Node.Position.Z);
-                    }
+                        Node.Position = new Vector3(Node.Position.X, d, Node.Position.Z);
                 }
             }
             catch (Exception)

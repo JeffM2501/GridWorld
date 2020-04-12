@@ -10,7 +10,6 @@ namespace GridWorld.Test.Components
 {
     public class PlayerAvatarController : LogicComponent
     {
-        public World TheWorld = null;
         public Camera CameraNode = null;
 
         public Node PivotNode = null;
@@ -117,7 +116,7 @@ namespace GridWorld.Test.Components
 
             if (!Flying)
             {
-                float d = TheWorld.DropDepth(Node.Position.X, Node.Position.Z);
+                float d = World.DropDepth(Node.Position.X, Node.Position.Z);
                 if (d != float.MinValue)
                     Node.Position = new Vector3(Node.Position.X, d, Node.Position.Z);
             }

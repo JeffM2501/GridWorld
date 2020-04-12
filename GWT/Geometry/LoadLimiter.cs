@@ -10,12 +10,20 @@ namespace GridWorld.Test.Geometry
     {
         private static int LoadCount = 0;
 
-        public static int LoadLimit = 2;
+        public static int LoadLimit = 3;
 
-        private static List<Cluster.ClusterPos> LoadPriority = new List<Cluster.ClusterPos>();
+        private static List<ClusterPos> LoadPriority = new List<ClusterPos>();
 
-        public static bool CanLoad(Cluster.ClusterPos pos)
+        static float LastLoad = float.MinValue;
+
+        public static float MinLoadTime = 1.0f / 60.0f;
+
+        public static bool CanLoad(ClusterPos pos)
         {
+            float now = Urho.Application.Current.Time.ElapsedTime;
+//             if (now - LastLoad < MinLoadTime)
+//                 return false;
+
             lock (LoadPriority)
             {
                 if (LoadPriority.Count == 0)
@@ -23,22 +31,23 @@ namespace GridWorld.Test.Geometry
                     if (LoadCount >= LoadLimit)
                         return false;
                     LoadCount++;
+                    LastLoad = now;
                     return true;
-
                 }
 
                 int index = LoadPriority.IndexOf(pos);
-                if (index < LoadLimit)
+                if (index >= 0 && index < LoadLimit)
                 {
                     LoadPriority.RemoveAt(index);
                     LoadCount++;
+                    LastLoad = now;
                     return true;
                 }
                 return false;
             }
         }
 
-        public static void AddLoadPriority(Cluster.ClusterPos pos)
+        public static void AddLoadPriority(ClusterPos pos)
         {
             lock (LoadPriority)
             {

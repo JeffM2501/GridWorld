@@ -46,8 +46,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Block.cs" />
     <Compile Include="Cluster.cs" />
-    <Compile Include="ClusterGeometry.cs" />
+    <Compile Include="Cluster.Geometry.cs" />
+    <Compile Include="ClusterPos.cs" />
     <Compile Include="Octree.cs" />
     <Compile Include="World.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

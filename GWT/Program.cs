@@ -19,7 +19,6 @@ namespace GridWorld.Test
         [STAThread]
         static void Main()
         {
-
             string dataPath = string.Empty;
 
             AppDir = new DirectoryInfo(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location));
