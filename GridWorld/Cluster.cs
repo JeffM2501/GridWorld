@@ -131,7 +131,16 @@ namespace GridWorld
 
         public Block GetBlockRelative(int h, int v, int d)
         {
-            return Blocks[(d * HVSize * HVSize) + (v * HVSize) + h];
+            try
+            {
+                return Blocks[(d * HVSize * HVSize) + (v * HVSize) + h];
+            }
+            catch (Exception)
+            {
+
+                throw;
+            }
+           
         }
 
         public Block GetBlockAbs(int h, int v, int d)
@@ -191,6 +200,12 @@ namespace GridWorld
             public override string ToString()
             {
                 return H.ToString() + "," + V.ToString();
+            }
+
+
+            public string ToString(string format)
+            {
+                return H.ToString(format) + "," + V.ToString(format);
             }
 
             public override bool Equals(object obj)

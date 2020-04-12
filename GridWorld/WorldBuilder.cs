@@ -171,6 +171,9 @@ namespace GridWorld
 
                 FillAreaWithBlock(newCluster, 25, 20, 28, 30, dLevel, dLevel + 5, Stone, Cluster.Block.Geometry.Solid);
 
+
+                FillAreaWithBlock(newCluster, 8, 0, 16, 2, dLevel, dLevel + 5, Stone, Cluster.Block.Geometry.Solid);
+
                 int dOffset = 4;
                 if (newCluster.Origin.H == 0 && newCluster.Origin.V == 0)
                     dOffset = 6;
@@ -185,14 +188,25 @@ namespace GridWorld
                 newCluster.SetBlockRelative(0, 2, dLevel + dOffset, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
                 newCluster.SetBlockRelative(0, 3, dLevel + dOffset, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
                 newCluster.SetBlockRelative(0, 3, dLevel + dOffset + 1, new Cluster.Block(Red, Cluster.Block.Geometry.SouthFullRamp));
+
+                if (newCluster.Origin.H < 0)
+                {
+                    newCluster.SetBlockRelative(16, 16, dLevel + dOffset, new Cluster.Block(Grass, Cluster.Block.Geometry.Solid));
+                }
+
+
+                if (newCluster.Origin.V < 0)
+                {
+                    newCluster.SetBlockRelative(16, 17, dLevel + dOffset, new Cluster.Block(Stone, Cluster.Block.Geometry.Solid));
+                }
             }
 
             public override void Build(string name, string[] paramaters, World world)
             {
                 InitStandardBlocks(world);
 
-                int HCount = 1;
-                int VCount = 2;
+                int HCount = 32;
+                int VCount = 32;
 
                 int hMin = 0;
                 if (HCount > 1)

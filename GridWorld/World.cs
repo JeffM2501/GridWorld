@@ -411,10 +411,10 @@ namespace GridWorld
 
         protected int AxisToGrid(int value)
         {
-            if (value >= 0)
-                return (value / Cluster.HVSize) * Cluster.HVSize;
+           if (value >= 0)
+              return (value / Cluster.HVSize) * Cluster.HVSize;
 
-            return ((value - Cluster.HVSize) / Cluster.HVSize) * Cluster.HVSize;
+           return (((value +1) - Cluster.HVSize) / Cluster.HVSize) * Cluster.HVSize;
         }
 
         public static Vector3 PositionToBlock(Vector3 pos)

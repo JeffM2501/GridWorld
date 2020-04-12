@@ -226,6 +226,9 @@ namespace GridWorld
 
             protected bool AboveIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
+                if (otherGeo == Cluster.Block.Invalid)
+                    return false;
+
                 if (thisGeo.Geom == Cluster.Block.Geometry.Fluid && otherGeo.Geom == Cluster.Block.Geometry.Fluid)
                     return false;
 
@@ -244,6 +247,10 @@ namespace GridWorld
 
             protected bool BellowIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
+                if (otherGeo == Cluster.Block.Invalid)
+                    return false;
+
+
                 if (thisGeo.Geom == Cluster.Block.Geometry.Fluid && otherGeo.Geom == Cluster.Block.Geometry.Fluid)
                     return false;
                 return otherGeo.Geom != Cluster.Block.Geometry.Solid && otherGeo.Geom != Cluster.Block.Geometry.HalfUpper && !IsLowerRamp(otherGeo) && !IsUpperRamp(otherGeo);
@@ -251,6 +258,9 @@ namespace GridWorld
 
             protected bool NorthIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
+                if (otherGeo == Cluster.Block.Invalid)
+                    return false;
+
                 if (thisGeo.Geom == Cluster.Block.Geometry.Fluid && otherGeo.Geom == Cluster.Block.Geometry.Fluid)
                     return false;
 
@@ -265,6 +275,10 @@ namespace GridWorld
 
             protected bool SouthIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
+                if (otherGeo == Cluster.Block.Invalid)
+                    return false;
+
+
                 if (thisGeo.Geom == Cluster.Block.Geometry.Fluid && otherGeo.Geom == Cluster.Block.Geometry.Fluid)
                     return false;
 
@@ -279,6 +293,9 @@ namespace GridWorld
 
             protected bool EastIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
+                if (otherGeo == Cluster.Block.Invalid)
+                    return false;
+
                 if (thisGeo.Geom == Cluster.Block.Geometry.Fluid && otherGeo.Geom == Cluster.Block.Geometry.Fluid)
                     return false;
 
@@ -293,6 +310,9 @@ namespace GridWorld
 
             protected bool WestIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
+                if (otherGeo == Cluster.Block.Invalid)
+                    return false;
+
                 if (thisGeo.Geom == Cluster.Block.Geometry.Fluid && otherGeo.Geom == Cluster.Block.Geometry.Fluid)
                     return false;
 
@@ -960,6 +980,7 @@ namespace GridWorld
                 return face;
             }
 
+
             public void BuildGeometryForCluster(Cluster cluster)
             {
                 World world = TheWorld;
@@ -994,23 +1015,32 @@ namespace GridWorld
 
                             if (block.Geom != Cluster.Block.Geometry.Empty)
                             {
+                                int blockWorldH = cluster.Origin.H + h;
+                                int blockWorldV = cluster.Origin.V + v;
+
+//                                 if (cluster.Origin.H < 0)
+//                                     blockWorldH += 1;
+// 
+//                                 if (cluster.Origin.V < 0)
+//                                     blockWorldV += 1;
+
                                 // see what's around us
-                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h, cluster.Origin.V + v, d + 1)))
+                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, world.BlockFromPosition(blockWorldH, blockWorldV, d + 1)))
                                     geometry.GetMesh(world.BlockTextureToTextureID(topTexture), def.Transperant).Add(ComputeLights(world, def, BuildAboveGeometry(world.BlockTextureToTextureOffset(topTexture), world.BlockTextureToTextureID(topTexture), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (d != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h, cluster.Origin.V + v, d - 1)))
+                                if (d != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, world.BlockFromPosition(blockWorldH, blockWorldV, d - 1)))
                                     geometry.GetMesh(world.BlockTextureToTextureID(bottomTexture), def.Transperant).Add(ComputeLights(world, def, BuildBelowGeometry(world.BlockTextureToTextureOffset(bottomTexture), world.BlockTextureToTextureID(bottomTexture), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.H + h, cluster.Origin.V + v + 1, d) && sideTexture[0] != World.BlockDef.EmptyID && NorthIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h, cluster.Origin.V + v + 1, d)))
+                                if (NorthIsOpen(block, world.BlockFromPosition(blockWorldH, blockWorldV + 1, d)))
                                     geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[0]), def.Transperant).Add(ComputeLights(world, def, BuildNorthGeometry(world.BlockTextureToTextureOffset(sideTexture[0]), world.BlockTextureToTextureID(sideTexture[0]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.H + h, cluster.Origin.V + v - 1, d) && sideTexture[1] != World.BlockDef.EmptyID && SouthIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h, cluster.Origin.V + v - 1, d)))
+                                if (SouthIsOpen(block, world.BlockFromPosition(blockWorldH, blockWorldV - 1, d)))
                                     geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[1]), def.Transperant).Add(ComputeLights(world, def, BuildSouthGeometry(world.BlockTextureToTextureOffset(sideTexture[1]), world.BlockTextureToTextureID(sideTexture[1]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.H + h + 1, cluster.Origin.V + v, d) && sideTexture[2] != World.BlockDef.EmptyID && EastIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h + 1, cluster.Origin.V + v, d)))
+                                if (EastIsOpen(block, world.BlockFromPosition(blockWorldH + 1, blockWorldV, d)))
                                     geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[2]), def.Transperant).Add(ComputeLights(world, def, BuildEastGeometry(world.BlockTextureToTextureOffset(sideTexture[2]), world.BlockTextureToTextureID(sideTexture[2]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
 
-                                if (!world.PositionIsOffMap(cluster.Origin.H + h - 1, cluster.Origin.V + v, d) && sideTexture[3] != World.BlockDef.EmptyID && WestIsOpen(block, world.BlockFromPosition(cluster.Origin.H + h - 1, cluster.Origin.V + v, d)))
+                                if (WestIsOpen(block, world.BlockFromPosition(blockWorldH - 1, blockWorldV, d)))
                                     geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[3]), def.Transperant).Add(ComputeLights(world, def, BuildWestGeometry(world.BlockTextureToTextureOffset(sideTexture[3]), world.BlockTextureToTextureID(sideTexture[3]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
                             }
                     });

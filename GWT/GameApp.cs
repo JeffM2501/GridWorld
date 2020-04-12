@@ -67,6 +67,9 @@ namespace GridWorld.Test
             Exit();
         }
 
+
+        protected Text PostionGUI = null;
+
         public void SetupUI()
         {
             AvatarStatusElement = new UIElement();
@@ -88,6 +91,19 @@ namespace GridWorld.Test
             AvatarStatusElement.AddChild(text);
 
             PlayerNode.GetComponent<PlayerAvatarController>().FlightStatusChanged += new EventHandler((o, e) => text.Value = (o as PlayerAvatarController).Flying ? "Flying" : "Walking");
+
+            PostionGUI = new Text();
+            PostionGUI.Value = "X0 Y0 Z0";
+            PostionGUI.HorizontalAlignment = HorizontalAlignment.Left;
+            PostionGUI.VerticalAlignment = VerticalAlignment.Top;
+            PostionGUI.SetFont(ResourceCache.GetFont("fonts/Open_Sans/OpenSans-Regular.ttf"), 14);
+            PostionGUI.Position = new IntVector2(10, 20);
+            PostionGUI.SetColor(Color.Gray);
+            PostionGUI.SetMaxAnchor(1, 1);
+            PostionGUI.SetMinAnchor(0, 0);
+            AvatarStatusElement.AddChild(PostionGUI);
+
+            new MonoDebugHud(this).Show();
 
         }
 
@@ -200,6 +216,15 @@ namespace GridWorld.Test
         {
             if (Exiting)
                 return;
+
+            PostionGUI.Value = CameraNode.WorldPosition.ToString(6);
+            var cluster = Map.ClusterFromPosition(CameraNode.WorldPosition);
+            if (cluster != null)
+            {
+                PostionGUI.Value += " CO H" + cluster.Origin.H.ToString() + " V" + cluster.Origin.V.ToString();
+
+                PostionGUI.Value += " BO H" + ((int)(CameraNode.WorldPosition.X - cluster.Origin.H)).ToString() + " V" + ((int)(CameraNode.WorldPosition.Z - cluster.Origin.V)).ToString();
+            }
 
             base.OnUpdate(timeStep);
         }
