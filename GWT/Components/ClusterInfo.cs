@@ -1,10 +1,12 @@
-﻿using GridWorld.Test.Geometry;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
 using Urho;
+
+using GridWorld.Test.Geometry;
 
 namespace GridWorld.Test.Components
 {
@@ -47,7 +49,7 @@ namespace GridWorld.Test.Components
                     TryLoad = false;
             }
 
-            if (TheCluster.GeoValid() && Geometry.LoadLimiter.CanLoad(TheCluster.Origin))
+            if (TheCluster.GeoValid() && LoadLimiter.CanLoad(TheCluster.Origin))
             {
                 lock (Locker)
                     TryLoad = false;
@@ -113,10 +115,11 @@ namespace GridWorld.Test.Components
             {
                 if (GeoModel != null)
                 {
-                    TheCluster.DirtyGeo();
                     Node.RemoveComponent(GeoModel);
                     GeoModel.Dispose();
                     GeoModel = null;
+
+                    TheCluster.DirtyGeo();
                 }
                 TheCluster.AliveCount = 0;
             }

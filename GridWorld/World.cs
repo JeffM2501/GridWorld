@@ -215,7 +215,7 @@ namespace GridWorld
             Info = new WorldInfo();
         }
 
-        public static int AxisToGrid(int value)
+        public static Int64 AxisToGrid(Int64 value)
         {
            if (value >= 0)
               return (value / Cluster.HVSize) * Cluster.HVSize;
@@ -238,7 +238,7 @@ namespace GridWorld
             return Clusters[pos];
         }
 
-        public static Block BlockFromPosition(int h, int v, int d)
+        public static Block BlockFromPosition(Int64 h, Int64 v, Int64 d)
         {
             if (d >= Cluster.DSize || d < 0)
                 return Block.Invalid;
@@ -251,7 +251,7 @@ namespace GridWorld
             return Clusters[pos].GetBlockAbs(h, v, d);
         }
 
-        public static Block BlockFromRelativePosition(Cluster cluster, int h, int v, int d)
+        public static Block BlockFromRelativePosition(Cluster cluster, Int64 h, Int64 v, Int64 d)
         {
             if (d >= Cluster.DSize || d < 0)
                 return Block.Invalid;
@@ -269,15 +269,15 @@ namespace GridWorld
 
         public static Block BlockFromPosition(float h, float v, float d)
         {
-            return BlockFromPosition((int)h, (int)v, (int)d);
+            return BlockFromPosition((Int64)h, (Int64)v, (Int64)d);
         }
 
         public static Block BlockFromPosition(Vector3 pos)
         {
-            return BlockFromPosition((int)pos.X, (int)pos.Z, (int)pos.Y);
+            return BlockFromPosition((Int64)pos.X, (Int64)pos.Z, (Int64)pos.Y);
         }
 
-        public static Cluster ClusterFromPosition(int h, int v, int d)
+        public static Cluster ClusterFromPosition(Int64 h, Int64 v, Int64 d)
         {
             return ClusterFromPosition(new ClusterPos(AxisToGrid(h), AxisToGrid(v)));
         }
@@ -292,25 +292,25 @@ namespace GridWorld
 
         public static Cluster ClusterFromPosition(float h, float v, float d)
         {
-            return ClusterFromPosition((int)h, (int)v, (int)d);
+            return ClusterFromPosition((Int64)h, (Int64)v, (Int64)d);
         }
 
         public static Cluster ClusterFromPosition(Vector3 pos)
         {
-            return ClusterFromPosition((int)pos.X, (int)pos.Z, (int)pos.Y);
+            return ClusterFromPosition((Int64)pos.X, (Int64)pos.Z, (Int64)pos.Y);
         }
 
         public static bool PositionIsOffMap(float h, float v, float d)
         {
-            return PositionIsOffMap((int)h, (int)v, (int)d);
+            return PositionIsOffMap((Int64)h, (Int64)v, (Int64)d);
         }
 
         public static bool PositionIsOffMap(Vector3 pos)
         {
-            return PositionIsOffMap((int)pos.X, (int)pos.Z, (int)pos.Y);
+            return PositionIsOffMap((Int64)pos.X, (Int64)pos.Z, (Int64)pos.Y);
         }
 
-        public static bool PositionIsOffMap(int h, int v, int d)
+        public static bool PositionIsOffMap(Int64 h, Int64 v, Int64 d)
         {
             if (d >= Cluster.DSize || d < 0)
                 return true;
@@ -335,8 +335,8 @@ namespace GridWorld
                 return float.MinValue;
 
             Cluster c = Clusters[pos];
-            int x = (int)positionH - pos.H;
-            int y = (int)positionV - pos.V;
+            Int64 x = (Int64)positionH - pos.H;
+            Int64 y = (Int64)positionV - pos.V;
 
             float blockH = positionH - pos.H;
             float blockV = positionV - pos.V;

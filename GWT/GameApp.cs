@@ -102,8 +102,8 @@ namespace GridWorld.Test
             PostionGUI.SetMinAnchor(0, 0);
             AvatarStatusElement.AddChild(PostionGUI);
 
-            new MonoDebugHud(this).Show();
-
+           var debug = new MonoDebugHud(this);
+           debug.Show(Color.Gray);
         }
 
         public void SetupScene()

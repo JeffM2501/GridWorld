@@ -33,7 +33,7 @@ namespace GridWorld
             Geometry = null;
         }
 
-        public Block GetBlockRelative(int h, int v, int d)
+        public Block GetBlockRelative(Int64 h, Int64 v, Int64 d)
         {
             try
             {
@@ -47,17 +47,22 @@ namespace GridWorld
            
         }
 
-        public Block GetBlockAbs(int h, int v, int d)
+        public Block GetBlockAbs(Int64 h, Int64 v, Int64 d)
         {
             return GetBlockRelative(h - Origin.H, v - Origin.V, d);
         }
 
-        public void SetBlockRelative(int h, int v, int d, Block block)
+        public void SetBlockRelative(Int64 h, Int64 v, Int64 d, Block block)
         {
             Blocks[(d * HVSize * HVSize) + (v * HVSize) + h] = World.AddBlock(block);
         }
 
-        public void SetBlockAbs(int h, int v, int d, Block block)
+        public void SetBlockRelative(Int64 h, Int64 v, Int64 d, UInt16 blockIndex)
+        {
+            Blocks[(d * HVSize * HVSize) + (v * HVSize) + h] = blockIndex;
+        }
+
+        public void SetBlockAbs(Int64 h, Int64 v, Int64 d, Block block)
         {
             SetBlockRelative(h - Origin.H, v - Origin.V, d, block);
         }
@@ -108,18 +113,18 @@ namespace GridWorld
             return Bounds;
         }
 
-        public delegate void BlockCallback(int h, int v, int d, Block block);
+        public delegate void BlockCallback(Int64 h, Int64 v, Int64 d, Block block);
 
         public void DoForEachBlock(BlockCallback callback)
         {
             if (callback == null)
                 return;
 
-            for (int d = 0; d < DSize; d++)
+            for (Int64 d = 0; d < DSize; d++)
             {
-                for (int v = 0; v < HVSize; v++)
+                for (Int64 v = 0; v < HVSize; v++)
                 {
-                    for (int h = 0; h < Cluster.HVSize; h++)
+                    for (Int64 h = 0; h < Cluster.HVSize; h++)
                         callback.Invoke(h, v, d, GetBlockRelative(h, v, d));
                 }
             }

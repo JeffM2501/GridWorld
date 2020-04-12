@@ -318,7 +318,7 @@ namespace GridWorld
                 return ret;
             }
 
-            public static Face BuildAboveGeometry(int imageOffset, int texture, int h, int v, int d, Block block)
+            public static Face BuildAboveGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
                 Face face = new Face();
 
@@ -472,7 +472,7 @@ namespace GridWorld
                 return face;
             }
 
-            public static Face BuildBelowGeometry(int imageOffset, int texture, int h, int v, int d, Block block)
+            public static Face BuildBelowGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
                 if (block.Geom == Block.Geometry.Empty)
                     return Face.Empty;
@@ -499,7 +499,7 @@ namespace GridWorld
 
             private static float RampCenterUOffset = 0.017f; //015625f;
 
-            public static Face BuildNorthGeometry(int imageOffset, int texture, int h, int v, int d, Block block)
+            public static Face BuildNorthGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
                 Face face = new Face();
 
@@ -599,7 +599,7 @@ namespace GridWorld
                 return face;
             }
 
-            public static Face BuildSouthGeometry(int imageOffset, int texture, int h, int v, int d, Block block)
+            public static Face BuildSouthGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
                 Face face = new Face();
 
@@ -696,7 +696,7 @@ namespace GridWorld
                 return face;
             }
 
-            public static Face BuildEastGeometry(int imageOffset, int texture, int h, int v, int d, Block block)
+            public static Face BuildEastGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
                 Face face = new Face();
 
@@ -791,7 +791,7 @@ namespace GridWorld
                 return face;
             }
 
-            public static Face BuildWestGeometry(int imageOffset, int texture, int h, int v, int d, Block block)
+            public static Face BuildWestGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
                 Face face = new Face();
 
@@ -888,7 +888,7 @@ namespace GridWorld
                 return face;
             }
 
-            private static Block GetBlockNorthRelative(Cluster thisBlock, Cluster northBlock, int h, int v, int d)
+            private static Block GetBlockNorthRelative(Cluster thisBlock, Cluster northBlock, Int64 h, Int64 v, Int64 d)
             {
                 v = v + 1;
 
@@ -902,7 +902,7 @@ namespace GridWorld
                 return northBlock.GetBlockRelative(h, v, d);
             }
 
-            private static Block GetBlockSouthRelative(Cluster thisBlock, Cluster southBlock, int h, int v, int d)
+            private static Block GetBlockSouthRelative(Cluster thisBlock, Cluster southBlock, Int64 h, Int64 v, Int64 d)
             {
                 v = v - 1;
 
@@ -916,7 +916,7 @@ namespace GridWorld
                 return southBlock.GetBlockRelative(h, v, d);
             }
 
-            private static Block GetBlockEastRelative(Cluster thisBlock, Cluster eastBlock, int h, int v, int d)
+            private static Block GetBlockEastRelative(Cluster thisBlock, Cluster eastBlock, Int64 h, Int64 v, Int64 d)
             {
                 h = h + 1;
 
@@ -930,7 +930,7 @@ namespace GridWorld
                 return eastBlock.GetBlockRelative(h, v, d);
             }
 
-            private static Block GetBlockWestRelative(Cluster thisBlock, Cluster westBlock, int h, int v, int d)
+            private static Block GetBlockWestRelative(Cluster thisBlock, Cluster westBlock, Int64 h, Int64 v, Int64 d)
             {
                 h = h - 1;
 
@@ -981,8 +981,8 @@ namespace GridWorld
 
                             if (block.Geom != Block.Geometry.Empty)
                             {
-                                int blockWorldH = cluster.Origin.H + h;
-                                int blockWorldV = cluster.Origin.V + v;
+                                Int64 blockWorldH = cluster.Origin.H + h;
+                                Int64 blockWorldV = cluster.Origin.V + v;
 
 //                                 if (cluster.Origin.H < 0)
 //                                     blockWorldH += 1;

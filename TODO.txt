@@ -1,14 +1,14 @@
 *Camera
 *Depth Projection
 *Geometry Verification
-Runtime Geometry loading
-64 bit cluster indexes
-Collision Verification
+*Runtime Geometry loading
+*64 bit cluster indexes
 Procedural Generation
 Dynamic Cluster Loading
 Material and block shape bitmasks (dir, shape, height, density)
 Moving origin
 3D Cluster indexes
+Collision Verification
 Vertex Shaders for fluids
 Strucutres
 Editing

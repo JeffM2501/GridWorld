@@ -94,10 +94,11 @@ namespace GridWorld
 
             public static void FillClusterDWithBlock(Cluster cluster, int D, int blockID, Block.Geometry geo)
             {
+                ushort index = World.AddBlock(new Block(blockID, geo));
                 for (int h = 0; h < Cluster.HVSize; h++)
                 {
                     for (int v = 0; v < Cluster.HVSize; v++)
-                        cluster.SetBlockRelative(h, v, D, new Block(blockID, geo));
+                        cluster.SetBlockRelative(h, v, D, index);
                 }
             }
 
@@ -109,12 +110,14 @@ namespace GridWorld
 
             public static void FillAreaWithBlock(Cluster cluster, int minH, int minV, int maxH, int maxV, int minD, int maxD, int blockID, Block.Geometry geo)
             {
+                ushort index = World.AddBlock(new Block(blockID, geo));
+
                 for (int d = minD; d < maxD; d++)
                 {
                     for (int h = minH; h < maxH; h++)
                     {
                         for (int v = minV; v < maxV; v++)
-                            cluster.SetBlockRelative(h, v, d, new Block(blockID, geo));
+                            cluster.SetBlockRelative(h, v, d, index);
                     }
                 }
             }
@@ -216,7 +219,8 @@ namespace GridWorld
                 dLevel++;
 
                 // make a hole 
-                FillAreaWithBlock(newCluster, 1, 1, 31, 31, dLevel - 2, dLevel, Stone, Block.Geometry.Solid);
+                FillAreaWithBlock(newCluster, 2, 2, 30, 30, dLevel - 2, dLevel, Water, Block.Geometry.Fluid);
+                FillAreaWithBlock(newCluster, 14, 14, 18, 18, dLevel - 2, dLevel+1, Stone, Block.Geometry.Solid);
 
                 int xCenter = 16;
                 int yCetner = 16;

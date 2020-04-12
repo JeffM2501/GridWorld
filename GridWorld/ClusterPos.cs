@@ -10,11 +10,11 @@ namespace GridWorld
     {
         public static ClusterPos Zero = new ClusterPos(0, 0);
 
-        public int H = 0;
-        public int V = 0;
+        public Int64 H = 0;
+        public Int64 V = 0;
 
         public ClusterPos() { }
-        public ClusterPos(int h, int v) { H = h; V = v; }
+        public ClusterPos(Int64 h, Int64 v) { H = h; V = v; }
         public ClusterPos(ClusterPos pos) { H = pos.H; V = pos.V; }
 
         public override int GetHashCode()
@@ -42,12 +42,12 @@ namespace GridWorld
             return p.H == H && p.V == V;
         }
 
-        public ClusterPos Offset(int h, int v)
+        public ClusterPos Offset(Int64 h, Int64 v)
         {
             return new ClusterPos(World.AxisToGrid(H + h), World.AxisToGrid(V + v));
         }
 
-        public ClusterPos OffsetGrid(int h, int v)
+        public ClusterPos OffsetGrid(Int64 h, Int64 v)
         {
             return new ClusterPos(World.AxisToGrid(H + (h * Cluster.HVSize)), World.AxisToGrid(V + (v * Cluster.HVSize)));
         }
