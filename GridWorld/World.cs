@@ -10,7 +10,7 @@ using Urho;
 
 namespace GridWorld
 {
-    public class World
+    public static class World
     { 
         public static string WorldFileExtension = "world";
         public static string ClusterFileExtension = "cluster";
@@ -18,7 +18,34 @@ namespace GridWorld
 
         public static bool CompressFileIO = true;
 
-        public static World Empty = new World();
+        public static List<Block> BlockIndexCache = new List<Block>();
+
+        public static ushort AddBlock(Block blocInfo)
+        {
+            lock (BlockIndexCache)
+            {
+                if (blocInfo == Block.Empty)
+                    return 0;
+
+                if (blocInfo == Block.Invalid)
+                    throw new Exception("Can not add invalid block to cluster");
+
+                int index = BlockIndexCache.FindIndex(x => x.Equals(blocInfo));
+                if (index >= 0)
+                    return (ushort)(index + 1);
+
+                BlockIndexCache.Add(blocInfo);
+                return (ushort)BlockIndexCache.Count();
+            }
+        }
+
+        public static Block GetBlock(ushort index)
+        {
+            if (index == 0 || index > BlockIndexCache.Count)
+                return Block.Empty;
+
+            return BlockIndexCache[index - 1];
+        }
 
         public class TextureInfo
         {
@@ -69,12 +96,11 @@ namespace GridWorld
             public float Ambient = 0.5f;
             public float SunLuminance = 1.0f;
         }
-        public WorldInfo Info = new WorldInfo();
+        public static WorldInfo Info = new WorldInfo();
 
-        [XmlIgnore]
-        protected Dictionary<Cluster.Block.Geometry, Plane> CollisionPlanes = new Dictionary<Cluster.Block.Geometry, Plane>();
+        private static Dictionary<Block.Geometry, Plane> CollisionPlanes = new Dictionary<Block.Geometry, Plane>();
 
-        public void SetupTextureInfos()
+        public static void SetupTextureInfos()
         {
             int count = 0;
             foreach (TextureInfo info in Info.Textures)
@@ -85,13 +111,13 @@ namespace GridWorld
             }
         }
 
-        protected void CheckTextureInfos()
+        private static void CheckTextureInfos()
         {
             if (Info.Textures.Count > 0 && Info.Textures[0].End == -1)
                 SetupTextureInfos();
         }
 
-        public int BlockTextureToTextureID(int blockTexture)
+        public static int BlockTextureToTextureID(int blockTexture)
         {
             CheckTextureInfos();
 
@@ -104,7 +130,7 @@ namespace GridWorld
             return -1;
         }
 
-        public int BlockTextureToTextureOffset(int blockTexture)
+        public static int BlockTextureToTextureOffset(int blockTexture)
         {
             int texture = BlockTextureToTextureID(blockTexture);
             if (texture < 0)
@@ -170,243 +196,23 @@ namespace GridWorld
             public static int EmptyID = -1;
         }
 
-        public List<BlockDef> BlockDefs = new List<BlockDef>();
+        public static List<BlockDef> BlockDefs = new List<BlockDef>();
 
-        public int AddBlockDef(BlockDef def)
+        public static int AddBlockDef(BlockDef def)
         {
             BlockDefs.Add(def);
             return BlockDefs.Count - 1;
         }
 
-        [XmlIgnore]
-        protected OctreeRoot octree;
+        public static Dictionary<ClusterPos, Cluster> Clusters = new Dictionary<ClusterPos, Cluster>();
 
-        [XmlIgnore]
-        public Dictionary<ClusterPos, Cluster> Clusters = new Dictionary<ClusterPos, Cluster>();
 
-        public void Serialize(FileInfo location)
+        public static void Clear()
         {
-            if (location.Exists)
-                location.Delete();
-            FileStream fs = location.OpenWrite();
-            XmlSerializer XML = new XmlSerializer(typeof(World));
-            if (CompressFileIO)
-            {
-                GZipStream gz = new GZipStream(fs, CompressionMode.Compress);
-                XML.Serialize(gz, this);
-                gz.Close();
-            }
-            else
-                XML.Serialize(fs, this);
-
-            fs.Close();
-        }
-
-        public static World Deserialize(FileInfo location)
-        {
-            if (!location.Exists)
-                return World.Empty;
-
-            try
-            {
-                FileStream fs = location.OpenRead();
-                XmlSerializer XML = new XmlSerializer(typeof(World));
-                World world = null;
-                if (CompressFileIO)
-                {
-                    GZipStream gz = new GZipStream(fs, CompressionMode.Decompress);
-                    world = (World)XML.Deserialize(gz);
-                    gz.Close();
-                }
-                else
-                    world = (World)XML.Deserialize(fs);
-
-                fs.Close();
-                return world;
-            }
-            catch (System.Exception /*ex*/)
-            {
-            }
-
-            return World.Empty;
-        }
-
-        public static World ReadWorldAndClusters(FileInfo location)
-        {
-            World world = Deserialize(location);
-            if (world == World.Empty)
-                return World.Empty;
-
-            DirectoryInfo dir = new DirectoryInfo(location.DirectoryName);
-            foreach (FileInfo file in dir.GetFiles("*." + ClusterFileExtension))
-            {
-                try
-                {
-                    FileStream fs = file.OpenRead();
-                    XmlSerializer XML = new XmlSerializer(typeof(Cluster));
-                    Cluster cluster = null;
-                    if (CompressFileIO)
-                    {
-                        GZipStream gz = new GZipStream(fs, CompressionMode.Decompress);
-                        cluster = (Cluster)XML.Deserialize(gz);
-                        gz.Close();
-                    }
-                    else
-                        cluster = (Cluster)XML.Deserialize(fs);
-                    fs.Close();
-
-                    world.Clusters.Add(cluster.Origin, cluster);
-                }
-                catch (System.Exception /*ex*/)
-                {
-
-                }
-            }
-            world.Finailize();
-            return world;
-        }
-
-        public static World ReadWorldWithGeometry(FileInfo location)
-        {
-            World world = ReadWorldAndClusters(location);
-            if (world == World.Empty)
-                return World.Empty;
-
-            DirectoryInfo dir = new DirectoryInfo(location.DirectoryName);
-            foreach (FileInfo file in dir.GetFiles("*." + GeometryFileExtension))
-            {
-                try
-                {
-                    ClusterGeometry geometry = ClusterGeometry.Deserialize(file);
-                    if (world.Clusters.ContainsKey(geometry.ClusterOrigin))
-                        world.Clusters[geometry.ClusterOrigin].Geometry = geometry;
-                }
-                catch (System.Exception /*ex*/)
-                {
-
-                }
-            }
-            return world;
-        }
-
-        public void SaveWorldAndClusters(FileInfo location)
-        {
-            Serialize(location);
-
-            // kill all clusters in that folder
-            foreach (FileInfo clusterFile in location.Directory.GetFiles("*." + ClusterFileExtension))
-                clusterFile.Delete();
-
-            foreach (Cluster c in Clusters.Values)
-            {
-                FileInfo file = new FileInfo(Path.Combine(location.DirectoryName, c.Origin.ToString() + "." + ClusterFileExtension));
-                FileStream fs = file.OpenWrite();
-
-                XmlSerializer XML = new XmlSerializer(typeof(Cluster));
-                if (CompressFileIO)
-                {
-                    GZipStream gz = new GZipStream(fs, CompressionMode.Compress);
-                    XML.Serialize(gz, c);
-                    gz.Close();
-                }
-                else
-                    XML.Serialize(fs, c);
-
-                fs.Close();
-            }
-        }
-
-        public void SaveWorldWithGeometry(FileInfo location)
-        {
-            SaveWorldAndClusters(location);
-
-            // kill all clusters in that folder
-            foreach (FileInfo clusterFile in location.Directory.GetFiles("*." + GeometryFileExtension))
-                clusterFile.Delete();
-
-            foreach (Cluster c in Clusters.Values)
-                c.Geometry.Serialize(new FileInfo(Path.Combine(location.DirectoryName, c.Origin.ToString() + "." + GeometryFileExtension)));
-        }
-
-        public List<Cluster> ClustersInFrustum(Frustum frustum, bool useOctree)
-        {
-            // super cheap
-            List<Cluster> vis = new List<Cluster>();
-
-            if (useOctree && octree != null)
-                return InFrustum<Cluster>(frustum);
-            else
-            {
-                foreach (KeyValuePair<ClusterPos, Cluster> item in Clusters)
-                {
-                    if (frustum.Contains(item.Value.Bounds) != ContainmentType.Disjoint)
-                        vis.Add(item.Value);
-                }
-            }
-            return vis;
-        }
-
-        public void Finailize()
-        {
-            octree = new OctreeRoot();
-            octree.Add(Clusters.Values);
-        }
-
-        public void AddObject(IOctreeObject obj)
-        {
-            if (octree != null)
-                octree.Add(obj);
-        }
-
-        public void RemoveObject(IOctreeObject obj)
-        {
-            if (octree != null)
-                octree.FastRemove(obj);
-        }
-
-        public List<T> InFrustum<T>(Frustum frustum) where T : IOctreeObject
-        {
-            List<T> objects = new List<T>();
-
-            if (octree != null)
-            {
-                List<object> v = new List<object>();
-                octree.ObjectsInFrustum(v, frustum);
-                foreach (object c in v)
-                {
-                    if (c.GetType() == typeof(T) || c.GetType().IsSubclassOf(typeof(T)))
-                        objects.Add((T)c);
-                }
-            }
-            return objects;
-        }
-
-        public List<T> InBoundingBox<T>(BoundingBox box) where T : IOctreeObject
-        {
-            List<T> objects = new List<T>();
-
-            if (octree != null)
-            {
-                List<object> v = new List<object>();
-                octree.ObjectsInBoundingBox(v, box);
-                foreach (T c in v)
-                    objects.Add(c);
-            }
-            return objects;
-        }
-
-        public List<T> InBoundingSphere<T>(SphereShape sphere) where T : IOctreeObject
-        {
-            List<T> objects = new List<T>();
-
-            if (octree != null)
-            {
-                List<object> v = new List<object>();
-                octree.ObjectsInBoundingSphere(v, sphere);
-                foreach (T c in v)
-                    objects.Add(c);
-            }
-            return objects;
+            BlockDefs.Clear();
+            BlockIndexCache.Clear();
+            Clusters.Clear();
+            Info = new WorldInfo();
         }
 
         public static int AxisToGrid(int value)
@@ -422,7 +228,7 @@ namespace GridWorld
             return new Vector3((float)Math.Floor(pos.X), (float)Math.Floor(pos.Y), (float)Math.Floor(pos.Z));
         }
 
-        public Cluster NeighborCluster(ClusterPos origin, int offsetH, int offsetV, int offsetD)
+        public static Cluster NeighborCluster(ClusterPos origin, int offsetH, int offsetV, int offsetD)
         {
             ClusterPos pos = origin.OffsetGrid(offsetH,offsetV);
 
@@ -432,23 +238,23 @@ namespace GridWorld
             return Clusters[pos];
         }
 
-        public Cluster.Block BlockFromPosition(int h, int v, int d)
+        public static Block BlockFromPosition(int h, int v, int d)
         {
             if (d >= Cluster.DSize || d < 0)
-                return Cluster.Block.Invalid;
+                return Block.Invalid;
 
             ClusterPos pos = new ClusterPos(AxisToGrid(h), AxisToGrid(v));
 
             if (!Clusters.ContainsKey(pos))
-                return Cluster.Block.Invalid;
+                return Block.Invalid;
 
             return Clusters[pos].GetBlockAbs(h, v, d);
         }
 
-        public Cluster.Block BlockFromRelativePosition(Cluster cluster, int h, int v, int d)
+        public static Block BlockFromRelativePosition(Cluster cluster, int h, int v, int d)
         {
             if (d >= Cluster.DSize || d < 0)
-                return Cluster.Block.Invalid;
+                return Block.Invalid;
 
             if (h >= 0 && h < Cluster.HVSize && v >= 0 && v < Cluster.HVSize)
                 return cluster.GetBlockRelative(h, v, d);
@@ -456,27 +262,27 @@ namespace GridWorld
             ClusterPos pos = new ClusterPos(AxisToGrid(cluster.Origin.H + h), AxisToGrid(cluster.Origin.V + v));
 
             if (!Clusters.ContainsKey(pos))
-                return Cluster.Block.Invalid;
+                return Block.Invalid;
 
             return Clusters[pos].GetBlockAbs(cluster.Origin.H + h, cluster.Origin.V + v, d);
         }
 
-        public Cluster.Block BlockFromPosition(float h, float v, float d)
+        public static Block BlockFromPosition(float h, float v, float d)
         {
             return BlockFromPosition((int)h, (int)v, (int)d);
         }
 
-        public Cluster.Block BlockFromPosition(Vector3 pos)
+        public static Block BlockFromPosition(Vector3 pos)
         {
             return BlockFromPosition((int)pos.X, (int)pos.Z, (int)pos.Y);
         }
 
-        public Cluster ClusterFromPosition(int h, int v, int d)
+        public static Cluster ClusterFromPosition(int h, int v, int d)
         {
             return ClusterFromPosition(new ClusterPos(AxisToGrid(h), AxisToGrid(v)));
         }
 
-        public Cluster ClusterFromPosition(ClusterPos pos)
+        public static Cluster ClusterFromPosition(ClusterPos pos)
         {
             if (!Clusters.ContainsKey(pos))
                 return null;
@@ -484,27 +290,27 @@ namespace GridWorld
             return Clusters[pos];
         }
 
-        public Cluster ClusterFromPosition(float h, float v, float d)
+        public static Cluster ClusterFromPosition(float h, float v, float d)
         {
             return ClusterFromPosition((int)h, (int)v, (int)d);
         }
 
-        public Cluster ClusterFromPosition(Vector3 pos)
+        public static Cluster ClusterFromPosition(Vector3 pos)
         {
             return ClusterFromPosition((int)pos.X, (int)pos.Z, (int)pos.Y);
         }
 
-        public bool PositionIsOffMap(float h, float v, float d)
+        public static bool PositionIsOffMap(float h, float v, float d)
         {
             return PositionIsOffMap((int)h, (int)v, (int)d);
         }
 
-        public bool PositionIsOffMap(Vector3 pos)
+        public static bool PositionIsOffMap(Vector3 pos)
         {
             return PositionIsOffMap((int)pos.X, (int)pos.Z, (int)pos.Y);
         }
 
-        public bool PositionIsOffMap(int h, int v, int d)
+        public static bool PositionIsOffMap(int h, int v, int d)
         {
             if (d >= Cluster.DSize || d < 0)
                 return true;
@@ -517,12 +323,12 @@ namespace GridWorld
             return false;
         }
 
-        public float DropDepth(Vector2 position)
+        public static float DropDepth(Vector2 position)
         {
             return DropDepth(position.X, position.Y);
         }
 
-        public float DropDepth(float positionH, float positionV)
+        public static float DropDepth(float positionH, float positionV)
         {
             ClusterPos pos = new ClusterPos(AxisToGrid((int)positionH), AxisToGrid((int)positionV));
             if (!Clusters.ContainsKey(pos))
@@ -545,12 +351,12 @@ namespace GridWorld
             return float.MinValue;
         }
 
-        public bool BlockPositionIsPassable(Vector3 pos)
+        public static bool BlockPositionIsPassable(Vector3 pos)
         {
             return BlockPositionIsPassable(pos, null);
         }
 
-        protected void CheckPlanes()
+        private static void CheckPlanes()
         {
             if (CollisionPlanes.Count != 0)
                 return;
@@ -558,66 +364,66 @@ namespace GridWorld
             Vector3 vec = new Vector3(0, 1, -1);
             vec.Normalize();
 
-            CollisionPlanes.Add(Cluster.Block.Geometry.NorthFullRamp, new Plane(new Vector4(vec, 0)));
+            CollisionPlanes.Add(Block.Geometry.NorthFullRamp, new Plane(new Vector4(vec, 0)));
 
             vec = new Vector3(0, 1, 1);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.SouthFullRamp, new Plane(new Vector4(vec, 1)));
+            CollisionPlanes.Add(Block.Geometry.SouthFullRamp, new Plane(new Vector4(vec, 1)));
 
             vec = new Vector3(-1, 1, 0);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.EastFullRamp, new Plane(new Vector4(vec, 0)));
+            CollisionPlanes.Add(Block.Geometry.EastFullRamp, new Plane(new Vector4(vec, 0)));
 
             vec = new Vector3(1, 1, 0);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.WestFullRamp, new Plane(new Vector4(vec, 1)));
+            CollisionPlanes.Add(Block.Geometry.WestFullRamp, new Plane(new Vector4(vec, 1)));
 
 
             vec = new Vector3(0, 1, -0.5f);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.NorthHalfLowerRamp, new Plane(new Vector4(vec, 0)));
+            CollisionPlanes.Add(Block.Geometry.NorthHalfLowerRamp, new Plane(new Vector4(vec, 0)));
 
             vec = new Vector3(0, 1, 0.5f);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.SouthHalfLowerRamp, new Plane(new Vector4(vec, 0.5f)));
+            CollisionPlanes.Add(Block.Geometry.SouthHalfLowerRamp, new Plane(new Vector4(vec, 0.5f)));
 
             vec = new Vector3(-0.5f, 1, 0);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.EastHalfLowerRamp, new Plane(new Vector4(vec, 0)));
+            CollisionPlanes.Add(Block.Geometry.EastHalfLowerRamp, new Plane(new Vector4(vec, 0)));
 
             vec = new Vector3(0.5f, 1, 0);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.WestHalfLowerRamp, new Plane(new Vector4(vec, 0.5f)));
+            CollisionPlanes.Add(Block.Geometry.WestHalfLowerRamp, new Plane(new Vector4(vec, 0.5f)));
 
 
             vec = new Vector3(0, 1, -0.5f);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.NorthHalfUpperRamp, new Plane(new Vector4(vec, 0.5f)));
+            CollisionPlanes.Add(Block.Geometry.NorthHalfUpperRamp, new Plane(new Vector4(vec, 0.5f)));
 
             vec = new Vector3(0, 1, 0.5f);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.SouthHalfUpperRamp, new Plane(new Vector4(vec, 1)));
+            CollisionPlanes.Add(Block.Geometry.SouthHalfUpperRamp, new Plane(new Vector4(vec, 1)));
 
             vec = new Vector3(-0.5f, 1, 0);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.EastHalfUpperRamp, new Plane(new Vector4(vec, 0.5f)));
+            CollisionPlanes.Add(Block.Geometry.EastHalfUpperRamp, new Plane(new Vector4(vec, 0.5f)));
 
             vec = new Vector3(0.5f, 1, 0);
             vec.Normalize();
-            CollisionPlanes.Add(Cluster.Block.Geometry.WestHalfUpperRamp, new Plane(new Vector4(vec, 1)));
+            CollisionPlanes.Add(Block.Geometry.WestHalfUpperRamp, new Plane(new Vector4(vec, 1)));
         }
 
-        public bool BlockPositionIsPassable(Vector3 pos, Cluster.Block block, Vector3 blockPos, CollisionInfo info)
+        public static bool BlockPositionIsPassable(Vector3 pos, Block block, Vector3 blockPos, CollisionInfo info)
         {
             CheckPlanes();
 
-            if (block == Cluster.Block.Empty || block == Cluster.Block.Invalid || block.Geom == Cluster.Block.Geometry.Empty)
+            if (block == Block.Empty || block == Block.Invalid || block.Geom == Block.Geometry.Empty)
                 return true;
 
-            if (block.Geom == Cluster.Block.Geometry.Solid)
+            if (block.Geom == Block.Geometry.Solid)
                 return false;
 
-            if (block.Geom == Cluster.Block.Geometry.Fluid)
+            if (block.Geom == Block.Geometry.Fluid)
                 return true;
 
             int H = (int)blockPos.X;
@@ -628,10 +434,10 @@ namespace GridWorld
 
             switch (block.Geom)
             {
-                case Cluster.Block.Geometry.HalfUpper:
+                case Block.Geometry.HalfUpper:
                     return relPos.Y < 0.5f;
 
-                case Cluster.Block.Geometry.HalfLower:
+                case Block.Geometry.HalfLower:
                     return relPos.Y >= 0.5f;
             }
 
@@ -646,9 +452,9 @@ namespace GridWorld
             return false;
         }
 
-        public bool BlockPositionIsPassable(Vector3 pos, CollisionInfo info)
+        public static bool BlockPositionIsPassable(Vector3 pos, CollisionInfo info)
         {
-            Cluster.Block block = BlockFromPosition(pos);
+            Block block = BlockFromPosition(pos);
             Vector3 blockPos = PositionToBlock(pos);
 
             return BlockPositionIsPassable(pos, block, blockPos, info);
@@ -656,7 +462,7 @@ namespace GridWorld
 
         public class CollisionInfo
         {
-            public Cluster.Block CollidedBlock = Cluster.Block.Empty;
+            public Block CollidedBlock = Block.Empty;
             public float Lenght = 0f;
             public Vector3 CollidedBlockPosition = Vector3.Zero;
             public Vector3 CollisionLocation = Vector3.Zero;
@@ -669,7 +475,7 @@ namespace GridWorld
             public CollisionInfo NoCollide() { Collided = false; return this; }
         }
 
-        public CollisionInfo LineCollidesWithWorld(Vector3 start, Vector3 end)
+        public static  CollisionInfo LineCollidesWithWorld(Vector3 start, Vector3 end)
         {
             CollisionInfo info = new CollisionInfo();
 
@@ -772,7 +578,7 @@ namespace GridWorld
                 if (PositionIsOffMap(blockPos)) // we are done as soon as we go off the map
                     return info.NoCollide();
 
-                Cluster.Block block = BlockFromPosition(blockPos);
+                Block block = BlockFromPosition(blockPos);
 
                 info.CollidedBlock = block;
                 info.CollidedBlockPosition = blockPos;

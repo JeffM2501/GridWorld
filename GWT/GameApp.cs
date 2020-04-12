@@ -26,8 +26,6 @@ namespace GridWorld.Test
 
         public Node PlayerNode = null;
 
-        GridWorld.World Map = new World();
-
         public UIElement AvatarStatusElement = null;
 
         protected override void Start()
@@ -118,24 +116,23 @@ namespace GridWorld.Test
 
             RootScene.CreateComponent<DebugRenderer>();
 
-            new WorldBuilder.FlatBuilder().Build(string.Empty, null, Map);
-            GeoLoadManager.TheWorld = ClusterGeometry.GeometryBuilder.TheWorld = Map;
+            new WorldBuilder.FlatBuilder().Build(string.Empty, null);
 
             SetupCamera();
 
             PlayerNode = RootScene.CreateChild("local_player");
-            PlayerNode.AddComponent(new PlayerAvatarController() { TheWorld = Map, CameraNode = CameraNode.GetComponent<Camera>() });
+            PlayerNode.AddComponent(new PlayerAvatarController() {CameraNode = CameraNode.GetComponent<Camera>() });
 
             var depthTester = RootScene.CreateChild("depth_tester");
-            depthTester.AddComponent(new DepthTester() { TheWorld = Map });
+            depthTester.AddComponent(new DepthTester());
 
-            SetupSky(Map.Info.SunPosition.X, Map.Info.SunPosition.Y, Map.Info.SunPosition.Z);
+            SetupSky(World.Info.SunPosition.X, World.Info.SunPosition.Y, World.Info.SunPosition.Z);
 
-            float d = Map.DropDepth(PlayerNode.Position.X, PlayerNode.Position.Z);
+            float d = World.DropDepth(PlayerNode.Position.X, PlayerNode.Position.Z);
             if (d != float.MinValue)
                 PlayerNode.Position = new Vector3(PlayerNode.Position.X, d, PlayerNode.Position.Z);
 
-            foreach (var texture in Map.Info.Textures)
+            foreach (var texture in World.Info.Textures)
             {
                 if (texture.RuntimeMat == null)
                 {
@@ -149,7 +146,7 @@ namespace GridWorld.Test
                 }
             }
 
-            foreach (var cluster in Map.Clusters)
+            foreach (var cluster in World.Clusters)
             {
                 var clusterNode = RootScene.CreateChild("Cluster" + cluster.Key.ToString());
                 clusterNode.AddComponent(new ClusterInfo(cluster.Value));
@@ -225,7 +222,7 @@ namespace GridWorld.Test
             GeoLoadManager.UpdateGeoForPosition(CameraNode.WorldPosition);
 
             PostionGUI.Value = CameraNode.WorldPosition.ToString(6);
-            var cluster = Map.ClusterFromPosition(CameraNode.WorldPosition);
+            var cluster = World.ClusterFromPosition(CameraNode.WorldPosition);
             if (cluster != null)
             {
                 PostionGUI.Value += " CO H" + cluster.Origin.H.ToString() + " V" + cluster.Origin.V.ToString();

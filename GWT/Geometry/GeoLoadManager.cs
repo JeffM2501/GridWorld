@@ -10,8 +10,6 @@ namespace GridWorld.Test.Geometry
 {
     public static class GeoLoadManager
     {
-        public static World TheWorld = null;
-
         public delegate void GeoLoadCallback(Cluster theCluster, object tag);
 
         public static int ForceLoadRadius = 4;
@@ -42,7 +40,7 @@ namespace GridWorld.Test.Geometry
 
         private static void ForceClusterLoad(ClusterPos origin, int h, int v)
         {
-            var cluster = TheWorld.ClusterFromPosition(origin.Offset(h, v));
+            var cluster = World.ClusterFromPosition(origin.Offset(h, v));
             if (cluster == null)
             {
                 // it's off the current map, flag it for generation, another cycle will pick it up
@@ -91,7 +89,7 @@ namespace GridWorld.Test.Geometry
 
         public static void UpdateGeoForPosition(Vector3 cameraPos)
         {
-            var rootCluster = TheWorld.ClusterFromPosition(cameraPos);
+            var rootCluster = World.ClusterFromPosition(cameraPos);
             if (rootCluster == null)
                 return;
 

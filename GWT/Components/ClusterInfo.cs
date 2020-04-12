@@ -76,7 +76,7 @@ namespace GridWorld.Test.Components
                 index = 0;
                 foreach (var geo in geos)
                 {
-                    GeoModel.SetMaterial((uint)index, ClusterGeometry.GeometryBuilder.TheWorld.Info.Textures[geo.Item2].RuntimeMat);
+                    GeoModel.SetMaterial((uint)index, World.Info.Textures[geo.Item2].RuntimeMat);
                     index++;
                 }
                 GeoModel.CastShadows = true;

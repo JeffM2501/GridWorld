@@ -10,115 +10,17 @@ namespace GridWorld
 {
     public partial class Cluster : EventArgs,  IOctreeObject
     {
-        public class Block
-        {
-            public enum Geometry
-            {
-                Empty,
-                Solid,
-                Fluid,
-                NorthFullRamp,
-                SouthFullRamp,
-                EastFullRamp,
-                WestFullRamp,
-                HalfUpper,
-                HalfLower,
-                NorthHalfLowerRamp,
-                SouthHalfLowerRamp,
-                EastHalfLowerRamp,
-                WestHalfLowerRamp,
-                NorthHalfUpperRamp,
-                SouthHalfUpperRamp,
-                EastHalfUpperRamp,
-                WestHalfUpperRamp,
-            }
+        public ushort[] _Blocks = null;
 
-            public int DefID;
-
-            public Geometry Geom;
-
-            public object RenderTag = null;
-
-            public static Block Empty = new Block(World.BlockDef.EmptyID, Geometry.Empty);
-            public static Block Invalid = new Block(World.BlockDef.EmptyID, Geometry.Empty);
-
-            public Block() { }
-
-            public Block(int id, Geometry geo)
-            {
-                DefID = id;
-                Geom = geo;
-            }
-
-            public float GetDForLocalPosition(float h, float v)
-            {
-                if (Geom == Geometry.Empty)
-                    return float.MinValue;
-
-                float invH = 1 - h;
-                float invV = 1 - v;
-
-                switch (Geom)
-                {
-                    case Cluster.Block.Geometry.Solid:
-                    case Cluster.Block.Geometry.HalfUpper:
-                        return 1;
-
-                    case Cluster.Block.Geometry.HalfLower:
-                        return 0.5f;
-
-                    case Cluster.Block.Geometry.NorthFullRamp:
-                        return v;
-
-                    case Cluster.Block.Geometry.SouthFullRamp:
-                        return 1.0f - v;
-
-                    case Cluster.Block.Geometry.EastFullRamp:
-                        return h;
-
-                    case Cluster.Block.Geometry.WestFullRamp:
-                        return 1.0f - h;
-
-                    case Cluster.Block.Geometry.NorthHalfLowerRamp:
-                        return v * 0.5f;
-
-                    case Cluster.Block.Geometry.SouthHalfLowerRamp:
-                        return (1.0f - v) * 0.5f;
-
-                    case Cluster.Block.Geometry.EastHalfLowerRamp:
-                        return h * 0.5f;
-
-                    case Cluster.Block.Geometry.WestHalfLowerRamp:
-                        return (1.0f - h) * 0.5f;
-
-                    case Cluster.Block.Geometry.NorthHalfUpperRamp:
-                        return (v * 0.5f) + 0.5f;
-
-                    case Cluster.Block.Geometry.SouthHalfUpperRamp:
-                        return ((1.0f - v) * 0.5f) + 0.5f;
-
-                    case Cluster.Block.Geometry.EastHalfUpperRamp:
-                        return (h * 0.5f) + 0.5f;
-
-                    case Cluster.Block.Geometry.WestHalfUpperRamp:
-                        return ((1.0f - h) * 0.5f) + 0.5f;
-                }
-
-                return float.MinValue;
-            }
-        }
-
-        public Block[] _Blocks = null;
-
-        public Block[] Blocks
+        private ushort[] Blocks
         {
             get
             {
                 if (_Blocks == null)
                 {
-                    _Blocks = new Block[HVSize * HVSize * DSize];
+                    _Blocks = new ushort[HVSize * HVSize * DSize];
                     for (int i = 0; i < _Blocks.Length; i++)
-                        _Blocks[i] = Block.Empty;
+                        _Blocks[i] = 0;
                 }
                 return _Blocks;
             }
@@ -127,7 +29,7 @@ namespace GridWorld
         public void ClearAllBlocks()
         {
             for (int i = 0; i < Blocks.Length; i++)
-                Blocks[i] = Block.Empty;
+                Blocks[i] = 0;
             Geometry = null;
         }
 
@@ -135,7 +37,7 @@ namespace GridWorld
         {
             try
             {
-                return Blocks[(d * HVSize * HVSize) + (v * HVSize) + h];
+                return World.GetBlock(Blocks[(d * HVSize * HVSize) + (v * HVSize) + h]);
             }
             catch (Exception)
             {
@@ -152,7 +54,7 @@ namespace GridWorld
 
         public void SetBlockRelative(int h, int v, int d, Block block)
         {
-            Blocks[(d * HVSize * HVSize) + (v * HVSize) + h] = block;
+            Blocks[(d * HVSize * HVSize) + (v * HVSize) + h] = World.AddBlock(block);
         }
 
         public void SetBlockAbs(int h, int v, int d, Block block)

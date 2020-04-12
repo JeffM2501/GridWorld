@@ -46,6 +46,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Block.cs" />
     <Compile Include="Cluster.cs" />
     <Compile Include="Cluster.Geometry.cs" />
     <Compile Include="ClusterPos.cs" />
