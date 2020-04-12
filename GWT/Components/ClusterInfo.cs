@@ -12,8 +12,6 @@ namespace GridWorld.Test.Components
     {
         public Cluster TheCluster = null;
 
-        public bool Active = true;
-
         private StaticModel GeoModel = null;
 
         private object Locker = new object();
@@ -95,20 +93,8 @@ namespace GridWorld.Test.Components
 
         public void CheckLoad()
         {
-            if (Active)
-            {
-                if (NeedLoad())
-                    LoadGeo();
-            }
-            else
-            {
-                if (TheCluster.GetStatus() == Cluster.Statuses.GeometryBound)
-                {
-                    TheCluster.DirtyGeo();
-                    Node.RemoveComponent(GeoModel);
-                    GeoModel.Dispose();
-                }
-            }
+            if (NeedLoad())
+                LoadGeo();
         }
 
         public override void OnAttachedToNode(Node clusterNode)
@@ -121,6 +107,19 @@ namespace GridWorld.Test.Components
         {
             base.OnUpdate(timeStep);
             CheckLoad();
+
+            TheCluster.AliveCount -= timeStep;
+            if (TheCluster.AliveCount <= 0)
+            {
+                if (GeoModel != null)
+                {
+                    TheCluster.DirtyGeo();
+                    Node.RemoveComponent(GeoModel);
+                    GeoModel.Dispose();
+                    GeoModel = null;
+                }
+                TheCluster.AliveCount = 0;
+            }
         }
     }
 }

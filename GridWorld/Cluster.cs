@@ -8,7 +8,7 @@ using Urho;
 
 namespace GridWorld
 {
-    public class Cluster : EventArgs,  IOctreeObject
+    public partial class Cluster : EventArgs,  IOctreeObject
     {
         public class Block
         {
@@ -183,48 +183,6 @@ namespace GridWorld
         public const int HVSize = 32;
         public const int DSize = 32;
 
-        public class ClusterPos
-        {
-            public static ClusterPos Zero = new ClusterPos(0, 0);
-
-            public int H = 0;
-            public int V = 0;
-
-            public ClusterPos() { }
-            public ClusterPos(int h, int v) { H = h; V = v; }
-            public ClusterPos(ClusterPos pos) { H = pos.H; V = pos.V; }
-
-            public override int GetHashCode()
-            {
-                return H.GetHashCode() ^ V.GetHashCode();
-            }
-
-            public override string ToString()
-            {
-                return H.ToString() + "," + V.ToString();
-            }
-
-
-            public string ToString(string format)
-            {
-                return H.ToString(format) + "," + V.ToString(format);
-            }
-
-            public override bool Equals(object obj)
-            {
-                ClusterPos p = obj as ClusterPos;
-                if (p == null)
-                    return false;
-
-                return p.H == H && p.V == V;
-            }
-
-            public ClusterPos Offset(int h, int v)
-            {
-                return new ClusterPos(World.AxisToGrid(H + h), World.AxisToGrid(V + v));
-            }
-        }
-
         public ClusterPos Origin = ClusterPos.Zero;
         private bool BoundsValid = false;
         private BoundingBox _Bounds = new BoundingBox(0,0);
@@ -336,6 +294,8 @@ namespace GridWorld
                 ClusterGeoRefresh?.Invoke(this, this);
             }
         }
+
+        public float AliveCount = 0;
 
         [XmlIgnore]
         public object Tag = null;

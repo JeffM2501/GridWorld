@@ -12,7 +12,7 @@ namespace GridWorld
 {
     public class ClusterGeometry
     {
-        public Cluster.ClusterPos ClusterOrigin = Cluster.ClusterPos.Zero;
+        public ClusterPos ClusterOrigin = ClusterPos.Zero;
 
         public static ClusterGeometry Empty = new ClusterGeometry();
         public class Face
@@ -29,55 +29,93 @@ namespace GridWorld
         public class MeshGroup
         {
             public int TextureID = 0;
-            public List<Face> Faces = new List<Face>();
+            public List<VertexBuffer.PositionNormalColorTexcoord> Buffer = new List<VertexBuffer.PositionNormalColorTexcoord>();
+            public List<short> IndexData = new List<short>();
+
+
+            private static uint White = Urho.Color.White.ToUInt();
+
+            private short VIndex = 0;
 
             public MeshGroup() { }
             public MeshGroup(int ID) { TextureID = ID; }
+
             public void Add(Face face)
             {
-                if (face != Face.Empty)
-                    Faces.Add((face));
+                if (face.Verts == null)
+                    return;
+
+                Vector3 normal = face.Normal;
+                IndexData.Add(VIndex); VIndex++;
+                Buffer.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[2], Normal = normal, Color = White, TexCoord = face.UVs[2] });
+
+                IndexData.Add(VIndex); VIndex++;
+                Buffer.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[1], Normal = normal, Color = White, TexCoord = face.UVs[1] });
+
+                IndexData.Add(VIndex); VIndex++;
+                Buffer.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[0], Normal = normal, Color = White, TexCoord = face.UVs[0] });
+                
+                if (face.Verts.Length == 4)
+                {
+                    IndexData.Add(VIndex); VIndex++;
+                    if (face.UVs.Length == 3)
+                        Buffer.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[3], Normal = normal, Color = White, TexCoord = face.UVs[2] });
+                    else
+                        Buffer.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[3], Normal = normal, Color = White, TexCoord = face.UVs[3] });
+
+                    IndexData.Add(VIndex); VIndex++;
+                    Buffer.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[2], Normal = normal, Color = White, TexCoord = face.UVs[2] });
+
+                    IndexData.Add(VIndex); VIndex++;
+                    Buffer.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[0], Normal = normal, Color = White, TexCoord = face.UVs[0] });
+                }
+            }
+
+            VertexBuffer UrhoBufferCache = null;
+            IndexBuffer UrhoIndexCache = null;
+
+            public Tuple<Urho.Geometry, int> UrhoGeo = null;
+
+            public void FinalizeGeo()
+            {
+                if (UrhoBufferCache != null)
+                    UrhoBufferCache.Dispose();
+                if (UrhoIndexCache != null)
+                    UrhoIndexCache.Dispose();
+
+                UrhoBufferCache = new VertexBuffer(Application.Current.Context);
+                UrhoIndexCache = new IndexBuffer(Application.Current.Context);
+
+                UrhoBufferCache.Shadowed = true;
+
+                UrhoBufferCache.SetSize((uint)Buffer.Count, ElementMask.Position | ElementMask.Normal | ElementMask.Color | ElementMask.TexCoord1, false);
+                UrhoBufferCache.SetData(Buffer.ToArray());
+
+                UrhoIndexCache.Shadowed = true;
+                UrhoIndexCache.SetSize((uint)IndexData.Count, false);
+                UrhoIndexCache.SetData(IndexData.ToArray());
+
+                Urho.Geometry geo = new Urho.Geometry();
+                geo.SetVertexBuffer(0, UrhoBufferCache);
+                geo.IndexBuffer = UrhoIndexCache;
+                geo.SetDrawRange(PrimitiveType.TriangleList, 0, (uint)Buffer.Count);
+
+                UrhoGeo = new Tuple<Geometry, int>(geo, TextureID);
+
+                Buffer.Clear();
+                IndexData.Clear();
             }
         }
 
         [XmlIgnore]
         public Dictionary<int, MeshGroup> Meshes = new Dictionary<int, MeshGroup>();
 
-        [XmlIgnore]
-        public Dictionary<int, MeshGroup> TranspereantMeshes = new Dictionary<int, MeshGroup>();
-
-        public List<MeshGroup> MeshList = new List<MeshGroup>();
-        public List<MeshGroup> TransperantMeshList = new List<MeshGroup>();
-
-        public void Rebind()
+        public MeshGroup GetMesh(int id)
         {
-            Meshes.Clear();
-            TranspereantMeshes.Clear();
+            if (!Meshes.ContainsKey(id))
+                Meshes.Add(id, new MeshGroup(id));
 
-            foreach (MeshGroup m in MeshList)
-                Meshes.Add(m.TextureID, m);
-
-            foreach (MeshGroup m in TransperantMeshList)
-                TranspereantMeshes.Add(m.TextureID, m);
-        }
-
-        public MeshGroup GetMesh(int id, bool transperant)
-        {
-            Dictionary<int, MeshGroup> meshes = Meshes;
-            List<MeshGroup> meshList = MeshList;
-            if (transperant)
-            {
-                meshes = TranspereantMeshes;
-                meshList = TransperantMeshList;
-            }
-
-            if (!meshes.ContainsKey(id))
-            {
-                meshes.Add(id, new MeshGroup(id));
-                meshList.Add(meshes[id]);
-            }
-
-            return meshes[id];
+            return Meshes[id];
         }
 
         public void Serialize(FileInfo location)
@@ -120,7 +158,6 @@ namespace GridWorld
                     geo = (ClusterGeometry)XML.Deserialize(fs);
                 fs.Close();
 
-                geo.Rebind();
                 return geo;
             }
             catch (System.Exception /*ex*/)
@@ -130,75 +167,21 @@ namespace GridWorld
             return ClusterGeometry.Empty;
         }
 
-        private Tuple<Urho.Geometry, int> GetMeshData(MeshGroup mesh)
+        private void FinalizeGeo()
         {
-            VertexBuffer buffer = new VertexBuffer(Application.Current.Context);
-            List<VertexBuffer.PositionNormalColorTexcoord> verts = new List<VertexBuffer.PositionNormalColorTexcoord>();
-
-            IndexBuffer indexes = new IndexBuffer(Application.Current.Context);
-
-            List<short> indexData = new List<short>();
-            // add geo
-
-            uint white = Urho.Color.White.ToUInt();
-
-            Vector3 localOrigin = new Vector3(ClusterOrigin.H, 0, ClusterOrigin.V);
-
-            short vIndex = 0;
-            foreach (var face in mesh.Faces)
-            {
-                Vector3 normal = face.Normal;
-                indexData.Add(vIndex); vIndex++;
-                verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[2] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[2] });
-
-                indexData.Add(vIndex); vIndex++;
-                verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[1] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[1] });
-
-                indexData.Add(vIndex); vIndex++;
-                verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[0] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[0] });
-
-                if (face.Verts.Length == 4)
-                {
-                    indexData.Add(vIndex); vIndex++;
-                    if (face.UVs.Length == 3)
-                        verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[3] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[2] });
-                    else
-                        verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[3] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[3] });
-
-                    indexData.Add(vIndex); vIndex++;
-                    verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[2] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[2] });
-
-                    indexData.Add(vIndex); vIndex++;
-                    verts.Add(new VertexBuffer.PositionNormalColorTexcoord() { Position = face.Verts[0] - localOrigin, Normal = normal, Color = white, TexCoord = face.UVs[0] });
-                }
-            }
-
-            buffer.Shadowed = true;
-
-            buffer.SetSize((uint)verts.Count, ElementMask.Position | ElementMask.Normal | ElementMask.Color | ElementMask.TexCoord1, false);
-            buffer.SetData(verts.ToArray());
-
-            indexes.Shadowed = true;
-            indexes.SetSize((uint)indexData.Count, false);
-            indexes.SetData(indexData.ToArray());
-
-            Urho.Geometry geo = new Urho.Geometry();
-            geo.SetVertexBuffer(0, buffer);
-            geo.IndexBuffer = indexes;
-            geo.SetDrawRange(PrimitiveType.TriangleList, 0, (uint)verts.Count);
-
-            return new Tuple<Geometry, int>(geo, mesh.TextureID);
+//             foreach (var mesh in Meshes.Values)
+//                 mesh.FinalizeGeo();
         }
 
         public List<Tuple<Urho.Geometry, int>> BindToUrhoGeo()
         {
             List<Tuple<Urho.Geometry, int>> geoList = new List<Tuple<Urho.Geometry, int>>();
-            foreach (var mesh in MeshList)
-                geoList.Add(GetMeshData(mesh));
-
-            foreach (var mesh in TransperantMeshList)
-                geoList.Add(GetMeshData(mesh));
-
+            foreach (var mesh in Meshes.Values)
+            {
+                mesh.FinalizeGeo();
+                geoList.Add(mesh.UrhoGeo);
+            }
+            Meshes.Clear();
             return geoList;
         }
 
@@ -942,36 +925,61 @@ namespace GridWorld
                 return face;
             }
 
-            public static Face ComputeLights(World world, World.BlockDef blockDef, Face face)
+            private static Cluster.Block GetBlockNorthRelative(Cluster thisBlock, Cluster northBlock, int h, int v, int d)
             {
-                if (face.Verts == null)
-                    return face;
-                // walk each vertex and collide it with the sun
-                // for multi light add code to collide with every light in radius (build non graphic octree?) and add lumens;
-//                float offset = 0.01f;
+                v = v + 1;
 
-//                 for (int i = 0; i < 4; i++)
-//                 {
-//                     Vector3 newVec = face.Verts[i] + (face.Normal * offset);
-// 
-//                     Vector3 SunVec = world.Info.SunPosition - newVec;
-//                     SunVec.Normalize();
-// 
-//                     float dot = Vector3.Dot(face.Normal, SunVec);
-//                     if (dot >= 0)
-//                     {
-//                         if (world.LineCollidesWithWorld(newVec, world.Info.SunPosition).Collided)
-//                             face.Luminance[i] = world.Info.Ambient;
-//                         else
-//                             face.Luminance[i] = world.Info.SunLuminance;
-//                     }
-//                     else
-//                         face.Luminance[i] = 1;// world.Info.Ambient;
-//                 }
+                if (h >= 0 && h < Cluster.HVSize && v >= 0 && v < (Cluster.HVSize))
+                    return thisBlock.GetBlockRelative(h, v, d);
 
-                return face;
+                if (northBlock == null)
+                    return Cluster.Block.Invalid;
+
+                v = v - Cluster.HVSize;
+                return northBlock.GetBlockRelative(h, v, d);
             }
 
+            private static Cluster.Block GetBlockSouthRelative(Cluster thisBlock, Cluster southBlock, int h, int v, int d)
+            {
+                v = v - 1;
+
+                if (h >= 0 && h < Cluster.HVSize && v >= 0 && v < (Cluster.HVSize))
+                    return thisBlock.GetBlockRelative(h, v, d);
+
+                if(southBlock == null)
+                    return Cluster.Block.Invalid;
+
+                v = Cluster.HVSize + v;
+                return southBlock.GetBlockRelative(h, v, d);
+            }
+
+            private static Cluster.Block GetBlockEastRelative(Cluster thisBlock, Cluster eastBlock, int h, int v, int d)
+            {
+                h = h + 1;
+
+                if (h >= 0 && h < Cluster.HVSize && v >= 0 && v < (Cluster.HVSize))
+                    return thisBlock.GetBlockRelative(h, v, d);
+
+                if (eastBlock == null)
+                    return Cluster.Block.Invalid;
+
+                h = h - Cluster.HVSize;
+                return eastBlock.GetBlockRelative(h, v, d);
+            }
+
+            private static Cluster.Block GetBlockWestRelative(Cluster thisBlock, Cluster westBlock, int h, int v, int d)
+            {
+                h = h - 1;
+
+                if (h >= 0 && h < Cluster.HVSize && v >= 0 && v < (Cluster.HVSize))
+                    return thisBlock.GetBlockRelative(h, v, d);
+
+                if (westBlock == null)
+                    return Cluster.Block.Invalid;
+
+                h = Cluster.HVSize + h;
+                return westBlock.GetBlockRelative(h, v, d);
+            }
 
             public static void BuildGeometryForCluster(Cluster cluster)
             {
@@ -979,6 +987,11 @@ namespace GridWorld
 
                 ClusterGeometry geometry = new ClusterGeometry();
                 geometry.ClusterOrigin = cluster.Origin;
+
+                Cluster northCluster = TheWorld.NeighborCluster(cluster.Origin, 0, 1, 0);
+                Cluster southCluster = TheWorld.NeighborCluster(cluster.Origin, 0, -1, 0);
+                Cluster eastCluster = TheWorld.NeighborCluster(cluster.Origin, 1, 0, 0);
+                Cluster westCluster = TheWorld.NeighborCluster(cluster.Origin, -1, 0, 0);
 
                 cluster.DoForEachBlock((h, v, d, block)=>
                         {
@@ -1017,26 +1030,27 @@ namespace GridWorld
 //                                     blockWorldV += 1;
 
                                 // see what's around us
-                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, world.BlockFromPosition(blockWorldH, blockWorldV, d + 1)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(topTexture), def.Transperant).Add(ComputeLights(world, def, BuildAboveGeometry(world.BlockTextureToTextureOffset(topTexture), world.BlockTextureToTextureID(topTexture), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
+                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, cluster.GetBlockRelative(h, v, d + 1)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(topTexture)).Add(BuildAboveGeometry(world.BlockTextureToTextureOffset(topTexture), world.BlockTextureToTextureID(topTexture), h, v, d, block));
 
-                                if (d != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, world.BlockFromPosition(blockWorldH, blockWorldV, d - 1)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(bottomTexture), def.Transperant).Add(ComputeLights(world, def, BuildBelowGeometry(world.BlockTextureToTextureOffset(bottomTexture), world.BlockTextureToTextureID(bottomTexture), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
+                                if (d != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, cluster.GetBlockRelative( h, v, d - 1)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(bottomTexture)).Add(BuildBelowGeometry(world.BlockTextureToTextureOffset(bottomTexture), world.BlockTextureToTextureID(bottomTexture),  h, v, d, block));
 
-                                if (NorthIsOpen(block, world.BlockFromPosition(blockWorldH, blockWorldV + 1, d)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[0]), def.Transperant).Add(ComputeLights(world, def, BuildNorthGeometry(world.BlockTextureToTextureOffset(sideTexture[0]), world.BlockTextureToTextureID(sideTexture[0]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
+                                if (NorthIsOpen(block, GetBlockNorthRelative(cluster, northCluster, h, v, d)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[0])).Add(BuildNorthGeometry(world.BlockTextureToTextureOffset(sideTexture[0]), world.BlockTextureToTextureID(sideTexture[0]), h, v, d, block));
 
-                                if (SouthIsOpen(block, world.BlockFromPosition(blockWorldH, blockWorldV - 1, d)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[1]), def.Transperant).Add(ComputeLights(world, def, BuildSouthGeometry(world.BlockTextureToTextureOffset(sideTexture[1]), world.BlockTextureToTextureID(sideTexture[1]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
+                                if (SouthIsOpen(block, GetBlockSouthRelative(cluster, southCluster, h, v, d)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[1])).Add(BuildSouthGeometry(world.BlockTextureToTextureOffset(sideTexture[1]), world.BlockTextureToTextureID(sideTexture[1]), h, v, d, block));
 
-                                if (EastIsOpen(block, world.BlockFromPosition(blockWorldH + 1, blockWorldV, d)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[2]), def.Transperant).Add(ComputeLights(world, def, BuildEastGeometry(world.BlockTextureToTextureOffset(sideTexture[2]), world.BlockTextureToTextureID(sideTexture[2]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
+                                if (EastIsOpen(block, GetBlockEastRelative(cluster, eastCluster, h, v, d)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[2])).Add(BuildEastGeometry(world.BlockTextureToTextureOffset(sideTexture[2]), world.BlockTextureToTextureID(sideTexture[2]),  h, v, d, block));
 
-                                if (WestIsOpen(block, world.BlockFromPosition(blockWorldH - 1, blockWorldV, d)))
-                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[3]), def.Transperant).Add(ComputeLights(world, def, BuildWestGeometry(world.BlockTextureToTextureOffset(sideTexture[3]), world.BlockTextureToTextureID(sideTexture[3]), cluster.Origin.H + h, cluster.Origin.V + v, d, block)));
+                                if (WestIsOpen(block, GetBlockWestRelative(cluster, westCluster, h, v, d)))
+                                    geometry.GetMesh(world.BlockTextureToTextureID(sideTexture[3])).Add(BuildWestGeometry(world.BlockTextureToTextureOffset(sideTexture[3]), world.BlockTextureToTextureID(sideTexture[3]), h, v, d, block));
                             }
                     });
-   
+
+                geometry.FinalizeGeo();
                 cluster.UpdateGeo(geometry);
             }
 

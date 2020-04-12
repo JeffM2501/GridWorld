@@ -182,7 +182,7 @@ namespace GridWorld
         protected OctreeRoot octree;
 
         [XmlIgnore]
-        public Dictionary<Cluster.ClusterPos, Cluster> Clusters = new Dictionary<Cluster.ClusterPos, Cluster>();
+        public Dictionary<ClusterPos, Cluster> Clusters = new Dictionary<ClusterPos, Cluster>();
 
         public void Serialize(FileInfo location)
         {
@@ -337,7 +337,7 @@ namespace GridWorld
                 return InFrustum<Cluster>(frustum);
             else
             {
-                foreach (KeyValuePair<Cluster.ClusterPos, Cluster> item in Clusters)
+                foreach (KeyValuePair<ClusterPos, Cluster> item in Clusters)
                 {
                     if (frustum.Contains(item.Value.Bounds) != ContainmentType.Disjoint)
                         vis.Add(item.Value);
@@ -422,17 +422,43 @@ namespace GridWorld
             return new Vector3((float)Math.Floor(pos.X), (float)Math.Floor(pos.Y), (float)Math.Floor(pos.Z));
         }
 
+        public Cluster NeighborCluster(ClusterPos origin, int offsetH, int offsetV, int offsetD)
+        {
+            ClusterPos pos = origin.OffsetGrid(offsetH,offsetV);
+
+            if (!Clusters.ContainsKey(pos))
+                return null;
+
+            return Clusters[pos];
+        }
+
         public Cluster.Block BlockFromPosition(int h, int v, int d)
         {
             if (d >= Cluster.DSize || d < 0)
                 return Cluster.Block.Invalid;
 
-            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid(h), AxisToGrid(v));
+            ClusterPos pos = new ClusterPos(AxisToGrid(h), AxisToGrid(v));
 
             if (!Clusters.ContainsKey(pos))
                 return Cluster.Block.Invalid;
 
             return Clusters[pos].GetBlockAbs(h, v, d);
+        }
+
+        public Cluster.Block BlockFromRelativePosition(Cluster cluster, int h, int v, int d)
+        {
+            if (d >= Cluster.DSize || d < 0)
+                return Cluster.Block.Invalid;
+
+            if (h >= 0 && h < Cluster.HVSize && v >= 0 && v < Cluster.HVSize)
+                return cluster.GetBlockRelative(h, v, d);
+
+            ClusterPos pos = new ClusterPos(AxisToGrid(cluster.Origin.H + h), AxisToGrid(cluster.Origin.V + v));
+
+            if (!Clusters.ContainsKey(pos))
+                return Cluster.Block.Invalid;
+
+            return Clusters[pos].GetBlockAbs(cluster.Origin.H + h, cluster.Origin.V + v, d);
         }
 
         public Cluster.Block BlockFromPosition(float h, float v, float d)
@@ -447,12 +473,10 @@ namespace GridWorld
 
         public Cluster ClusterFromPosition(int h, int v, int d)
         {
-            if (d >= Cluster.DSize || d < 0)
-                return null;
-            return ClusterFromPosition(new Cluster.ClusterPos(AxisToGrid(h), AxisToGrid(v)));
+            return ClusterFromPosition(new ClusterPos(AxisToGrid(h), AxisToGrid(v)));
         }
 
-        public Cluster ClusterFromPosition(Cluster.ClusterPos pos)
+        public Cluster ClusterFromPosition(ClusterPos pos)
         {
             if (!Clusters.ContainsKey(pos))
                 return null;
@@ -485,7 +509,7 @@ namespace GridWorld
             if (d >= Cluster.DSize || d < 0)
                 return true;
 
-            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid(h), AxisToGrid(v));
+            ClusterPos pos = new ClusterPos(AxisToGrid(h), AxisToGrid(v));
 
             if (!Clusters.ContainsKey(pos))
                 return true;
@@ -500,7 +524,7 @@ namespace GridWorld
 
         public float DropDepth(float positionH, float positionV)
         {
-            Cluster.ClusterPos pos = new Cluster.ClusterPos(AxisToGrid((int)positionH), AxisToGrid((int)positionV));
+            ClusterPos pos = new ClusterPos(AxisToGrid((int)positionH), AxisToGrid((int)positionV));
             if (!Clusters.ContainsKey(pos))
                 return float.MinValue;
 
