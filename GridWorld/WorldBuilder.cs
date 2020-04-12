@@ -201,6 +201,41 @@ namespace GridWorld
                 }
             }
 
+            protected void AddCrapToCluster2(Cluster newCluster)
+            {
+                int dLevel = 0;
+
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 2, Stone, Cluster.Block.Geometry.Solid);
+                dLevel += 2;
+
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 4, Dirt, Cluster.Block.Geometry.Solid);
+                dLevel += 4;
+
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 1, Grass, Cluster.Block.Geometry.Solid);
+                dLevel++;
+
+                // make a hole 
+                FillAreaWithBlock(newCluster, 1, 1, 31, 31, dLevel - 2, dLevel, Water, Cluster.Block.Geometry.Fluid);
+
+                int xCenter = 16;
+                int yCetner = 16;
+
+                int dOffset = 4;
+                if (newCluster.Origin.H == 0 && newCluster.Origin.V == 0)
+                    dOffset = 6;
+
+                newCluster.SetBlockRelative(xCenter + 0, yCetner, dLevel + dOffset, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(xCenter + 1,yCetner, dLevel + dOffset, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(xCenter + 2,yCetner, dLevel + dOffset, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(xCenter + 3,yCetner, dLevel + dOffset, new Cluster.Block(Blue, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(xCenter + 3,yCetner, dLevel + dOffset + 1, new Cluster.Block(Blue, Cluster.Block.Geometry.WestFullRamp));
+
+                newCluster.SetBlockRelative(xCenter, yCetner + 1, dLevel + dOffset, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(xCenter, yCetner + 2, dLevel + dOffset, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(xCenter, yCetner + 3, dLevel + dOffset, new Cluster.Block(Red, Cluster.Block.Geometry.Solid));
+                newCluster.SetBlockRelative(xCenter, yCetner + 3, dLevel + dOffset + 1, new Cluster.Block(Red, Cluster.Block.Geometry.SouthFullRamp));
+            }
+
             public override void Build(string name, string[] paramaters, World world)
             {
                 InitStandardBlocks(world);
@@ -225,7 +260,8 @@ namespace GridWorld
                     {
                         Cluster newCluster = new Cluster();
                         newCluster.Origin = new Cluster.ClusterPos(h * Cluster.HVSize, v * Cluster.HVSize);
-                        AddCrapToCluster(newCluster);
+                        AddCrapToCluster2(newCluster);
+                        newCluster.FinalizeGeneration();
                         world.Clusters.Add(newCluster.Origin, newCluster);
                     }
                 }

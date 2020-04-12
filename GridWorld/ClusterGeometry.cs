@@ -144,7 +144,6 @@ namespace GridWorld
 
             Vector3 localOrigin = new Vector3(ClusterOrigin.H, 0, ClusterOrigin.V);
 
-
             short vIndex = 0;
             foreach (var face in mesh.Faces)
             {
@@ -205,26 +204,19 @@ namespace GridWorld
 
         public static void BuildGeometry(World world)
         {
-            GeometryBuilder geoBuilder = new GeometryBuilder(world);
-            geoBuilder.DoBuildGeometry();
+            GeometryBuilder.DoBuildGeometry();
         }
 
-        public static void BuildGeometry(World world, Cluster cluster)
+        public static void BuildGeometry(Cluster cluster)
         {
-            GeometryBuilder geoBuilder = new GeometryBuilder(world);
-            geoBuilder.BuildGeometryForCluster(cluster);
+            GeometryBuilder.BuildGeometryForCluster(cluster);
         }
 
-        public class GeometryBuilder
+        public static class GeometryBuilder
         {
-            public World TheWorld = null;
+            public static World TheWorld = null;
 
-            public GeometryBuilder(World world)
-            {
-                TheWorld = world;
-            }
-
-            protected bool AboveIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
+            private static bool AboveIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
                 if (otherGeo == Cluster.Block.Invalid)
                     return false;
@@ -235,17 +227,17 @@ namespace GridWorld
                 return otherGeo.Geom == Cluster.Block.Geometry.Fluid || otherGeo.Geom == Cluster.Block.Geometry.Empty || otherGeo.Geom == Cluster.Block.Geometry.HalfUpper;
             }
 
-            protected static bool IsLowerRamp(Cluster.Block thisGeo)
+            private static bool IsLowerRamp(Cluster.Block thisGeo)
             {
                 return thisGeo.Geom == Cluster.Block.Geometry.NorthHalfLowerRamp || thisGeo.Geom == Cluster.Block.Geometry.SouthHalfLowerRamp || thisGeo.Geom == Cluster.Block.Geometry.EastHalfLowerRamp || thisGeo.Geom == Cluster.Block.Geometry.WestHalfLowerRamp;
             }
 
-            protected static bool IsUpperRamp(Cluster.Block thisGeo)
+            private static bool IsUpperRamp(Cluster.Block thisGeo)
             {
                 return thisGeo.Geom == Cluster.Block.Geometry.NorthHalfUpperRamp || thisGeo.Geom == Cluster.Block.Geometry.SouthHalfUpperRamp || thisGeo.Geom == Cluster.Block.Geometry.EastHalfUpperRamp || thisGeo.Geom == Cluster.Block.Geometry.WestHalfUpperRamp;
             }
 
-            protected bool BellowIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
+            private static bool BellowIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
                 if (otherGeo == Cluster.Block.Invalid)
                     return false;
@@ -256,7 +248,7 @@ namespace GridWorld
                 return otherGeo.Geom != Cluster.Block.Geometry.Solid && otherGeo.Geom != Cluster.Block.Geometry.HalfUpper && !IsLowerRamp(otherGeo) && !IsUpperRamp(otherGeo);
             }
 
-            protected bool NorthIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
+            private static bool NorthIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
                 if (otherGeo == Cluster.Block.Invalid)
                     return false;
@@ -273,7 +265,7 @@ namespace GridWorld
                 return otherGeo.Geom != Cluster.Block.Geometry.Solid && otherGeo.Geom != Cluster.Block.Geometry.SouthFullRamp && otherGeo.Geom != Cluster.Block.Geometry.SouthHalfLowerRamp && otherGeo.Geom != Cluster.Block.Geometry.SouthHalfUpperRamp;
             }
 
-            protected bool SouthIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
+            private static bool SouthIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
                 if (otherGeo == Cluster.Block.Invalid)
                     return false;
@@ -291,7 +283,7 @@ namespace GridWorld
                 return otherGeo.Geom != Cluster.Block.Geometry.Solid && otherGeo.Geom != Cluster.Block.Geometry.NorthFullRamp && otherGeo.Geom != Cluster.Block.Geometry.NorthHalfLowerRamp && otherGeo.Geom != Cluster.Block.Geometry.NorthHalfUpperRamp;
             }
 
-            protected bool EastIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
+            private static bool EastIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
                 if (otherGeo == Cluster.Block.Invalid)
                     return false;
@@ -308,7 +300,7 @@ namespace GridWorld
                 return otherGeo.Geom != Cluster.Block.Geometry.Solid && otherGeo.Geom != Cluster.Block.Geometry.WestFullRamp && otherGeo.Geom != Cluster.Block.Geometry.WestHalfLowerRamp && otherGeo.Geom != Cluster.Block.Geometry.WestHalfUpperRamp;
             }
 
-            protected bool WestIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
+            private static bool WestIsOpen(Cluster.Block thisGeo, Cluster.Block otherGeo)
             {
                 if (otherGeo == Cluster.Block.Invalid)
                     return false;
@@ -345,12 +337,12 @@ namespace GridWorld
                 return ret;
             }
 
-            public Vector2[] GetUVsForOffset(int imageOffset, int texture)
+            public static Vector2[] GetUVsForOffset(int imageOffset, int texture)
             {
                 return GetUVsForOffset(imageOffset, texture, TheWorld);
             }
 
-            protected Face BuildAboveGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
+            private static Face BuildAboveGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
                 return BuildAboveGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
@@ -509,7 +501,7 @@ namespace GridWorld
                 return face;
             }
 
-            protected Face BuildBelowGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
+            private static Face BuildBelowGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
                 return BuildBelowGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
@@ -539,9 +531,9 @@ namespace GridWorld
                 return face;
             }
 
-            protected static float RampCenterUOffset = 0.017f; //015625f;
+            private static float RampCenterUOffset = 0.017f; //015625f;
 
-            protected Face BuildNorthGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
+            private static Face BuildNorthGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
                 return BuildNorthGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
@@ -646,7 +638,7 @@ namespace GridWorld
                 return face;
             }
 
-            protected Face BuildSouthGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
+            private static Face BuildSouthGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
                 return BuildSouthGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
@@ -748,7 +740,7 @@ namespace GridWorld
                 return face;
             }
 
-            protected Face BuildEastGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
+            private static Face BuildEastGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
                 return BuildEastGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
@@ -848,7 +840,7 @@ namespace GridWorld
                 return face;
             }
 
-            protected Face BuildWestGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
+            private static Face BuildWestGeometry(int imageOffset, int texture, int h, int v, int d, Cluster.Block block)
             {
                 return BuildWestGeometry(imageOffset, texture, h, v, d, block, TheWorld);
             }
@@ -950,7 +942,7 @@ namespace GridWorld
                 return face;
             }
 
-            public Face ComputeLights(World world, World.BlockDef blockDef, Face face)
+            public static Face ComputeLights(World world, World.BlockDef blockDef, Face face)
             {
                 if (face.Verts == null)
                     return face;
@@ -981,7 +973,7 @@ namespace GridWorld
             }
 
 
-            public void BuildGeometryForCluster(Cluster cluster)
+            public static void BuildGeometryForCluster(Cluster cluster)
             {
                 World world = TheWorld;
 
@@ -1045,14 +1037,12 @@ namespace GridWorld
                             }
                     });
    
-                cluster.Geometry = geometry;
+                cluster.UpdateGeo(geometry);
             }
 
-            public void DoBuildGeometry()
+            public static void DoBuildGeometry()
             {
-                World world = TheWorld;
-
-                foreach (Cluster cluster in world.Clusters.Values)
+                foreach (Cluster cluster in TheWorld.Clusters.Values)
                     BuildGeometryForCluster(cluster);
             }
         }

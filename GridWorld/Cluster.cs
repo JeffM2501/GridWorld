@@ -8,7 +8,7 @@ using Urho;
 
 namespace GridWorld
 {
-    public class Cluster : IOctreeObject
+    public class Cluster : EventArgs,  IOctreeObject
     {
         public class Block
         {
@@ -36,6 +36,8 @@ namespace GridWorld
             public int DefID;
 
             public Geometry Geom;
+
+            public object RenderTag = null;
 
             public static Block Empty = new Block(World.BlockDef.EmptyID, Geometry.Empty);
             public static Block Invalid = new Block(World.BlockDef.EmptyID, Geometry.Empty);
@@ -178,8 +180,8 @@ namespace GridWorld
             return GetBlockRelativePostion(Array.IndexOf(Blocks, block));
         }
 
-        public static int HVSize = 32;
-        public static int DSize = 32;
+        public const int HVSize = 32;
+        public const int DSize = 32;
 
         public class ClusterPos
         {
@@ -215,6 +217,11 @@ namespace GridWorld
                     return false;
 
                 return p.H == H && p.V == V;
+            }
+
+            public ClusterPos Offset(int h, int v)
+            {
+                return new ClusterPos(World.AxisToGrid(H + h), World.AxisToGrid(V + v));
             }
         }
 
@@ -275,6 +282,61 @@ namespace GridWorld
             }
         }
 
+        public enum Statuses
+        {
+            Raw,
+            Generated,
+            GeometryPending,
+            GeometryCreated,
+            GeometryBound,
+        }
+
+        [XmlIgnore]
+        private Statuses Status = Statuses.Raw;
+
+        private object StatusLocker = new object();
+
+        public Statuses GetStatus()
+        {
+            lock (StatusLocker)
+                return Status;
+        }
+
+        public void StartGeo()
+        {
+            lock (StatusLocker)
+                Status = Statuses.GeometryCreated;
+        }
+
+        public void FinalizeGeneration()
+        {
+            lock (StatusLocker)
+                Status = Statuses.Generated;
+        }
+
+        public void FinalizeBind()
+        {
+            lock (StatusLocker)
+            {
+                Status = Statuses.GeometryBound;
+                NeedBinding = false;
+            }
+        }
+
+        private bool NeedBinding = false;
+
+        public void RequestBinding()
+        {
+            lock (StatusLocker)
+            {
+                if (NeedBinding)
+                    return;
+
+                NeedBinding = true;
+                ClusterGeoRefresh?.Invoke(this, this);
+            }
+        }
+
         [XmlIgnore]
         public object Tag = null;
 
@@ -283,5 +345,39 @@ namespace GridWorld
 
         [XmlIgnore]
         public ClusterGeometry Geometry = null;
+
+        [XmlIgnore]
+        private object GeoLocker = new object();
+
+        public bool GeoValid()
+        {
+            lock (GeoLocker)
+                return Geometry != null;
+        }
+
+        public event EventHandler<Cluster> ClusterDirty = null;
+        public event EventHandler<Cluster> ClusterGeoRefresh = null;
+
+        public void DirtyGeo()
+        {
+            lock (GeoLocker)
+                Geometry = null;
+
+            lock (StatusLocker)
+                Status = Statuses.Generated;
+
+            ClusterDirty?.Invoke(this, this);
+        }
+
+        public void UpdateGeo(ClusterGeometry geo)
+        {
+            lock (GeoLocker)
+                Geometry = geo;
+
+            lock (StatusLocker)
+                Status = Statuses.GeometryCreated;
+
+            ClusterGeoRefresh?.Invoke(this,this);
+        }
     }
 }

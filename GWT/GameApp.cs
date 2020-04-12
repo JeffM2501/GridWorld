@@ -8,6 +8,7 @@ using Urho;
 using Urho.Gui;
 
 using GridWorld.Test.Components;
+using GridWorld.Test.Geometry;
 
 namespace GridWorld.Test
 {
@@ -118,7 +119,7 @@ namespace GridWorld.Test
             RootScene.CreateComponent<DebugRenderer>();
 
             new WorldBuilder.FlatBuilder().Build(string.Empty, null, Map);
-            //new WorldBuilder.FlatBuilder().BuildSimple(string.Empty, null, Map);
+            GeoLoadManager.TheWorld = ClusterGeometry.GeometryBuilder.TheWorld = Map;
 
             SetupCamera();
 
@@ -151,8 +152,11 @@ namespace GridWorld.Test
             foreach (var cluster in Map.Clusters)
             {
                 var clusterNode = RootScene.CreateChild("Cluster" + cluster.Key.ToString());
-                clusterNode.AddComponent(new ClusterInfo(cluster.Value, Map));
+                clusterNode.AddComponent(new ClusterInfo(cluster.Value));
             }
+
+            // start the geo generation process
+            GeoLoadManager.UpdateGeoForPosition(CameraNode.WorldPosition);
         }
 
         public void SetupSky(float sunPosX, float sunPosY, float sunPosZ)
@@ -216,6 +220,9 @@ namespace GridWorld.Test
         {
             if (Exiting)
                 return;
+
+            Geometry.LoadLimiter.UpdateFrame();
+            GeoLoadManager.UpdateGeoForPosition(CameraNode.WorldPosition);
 
             PostionGUI.Value = CameraNode.WorldPosition.ToString(6);
             var cluster = Map.ClusterFromPosition(CameraNode.WorldPosition);

@@ -59,6 +59,8 @@
     <Compile Include="Components\PlayerAvatarController.cs" />
     <Compile Include="Components\Sun.cs" />
     <Compile Include="GameApp.cs" />
+    <Compile Include="Geometry\GeoLoadManager.cs" />
+    <Compile Include="Geometry\LoadLimiter.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="Properties\Resources.resx">

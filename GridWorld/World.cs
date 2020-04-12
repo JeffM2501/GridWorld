@@ -409,7 +409,7 @@ namespace GridWorld
             return objects;
         }
 
-        protected int AxisToGrid(int value)
+        public static int AxisToGrid(int value)
         {
            if (value >= 0)
               return (value / Cluster.HVSize) * Cluster.HVSize;
