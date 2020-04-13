@@ -9,6 +9,8 @@ Material and block shape flags(dir, shape, height, density)
 Moving origin
 3D Cluster indexes
 Collision Verification
+Client Cleanup
+Fancy Procedural Generation
 Vertex Shaders for fluids
 Strucutres
 Editing
