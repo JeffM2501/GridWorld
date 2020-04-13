@@ -335,20 +335,20 @@ namespace GridWorld
                 return float.MinValue;
 
             Cluster c = Clusters[pos];
-            Int64 x = (Int64)positionH - pos.H;
-            Int64 y = (Int64)positionV - pos.V;
+//             Int64 x = (Int64)positionH - pos.H;
+//             Int64 y = (Int64)positionV - pos.V;
+// 
+//             float blockH = positionH - pos.H;
+//             float blockV = positionV - pos.V;
+// 
+//             for (int d = Cluster.DSize - 1; d >= 0; d--)
+//             {
+//                 float value = c.GetBlockRelative(x, y, d).GetDForLocalPosition(blockH - x, blockV - y);
+//                 if (value != float.MinValue)
+//                     return d + value;
+//             }
 
-            float blockH = positionH - pos.H;
-            float blockV = positionV - pos.V;
-
-            for (int d = Cluster.DSize - 1; d >= 0; d--)
-            {
-                float value = c.GetBlockRelative(x, y, d).GetDForLocalPosition(blockH - x, blockV - y);
-                if (value != float.MinValue)
-                    return d + value;
-            }
-
-            return float.MinValue;
+            return c.DropDepth(positionH-pos.H,positionV - pos.V);
         }
 
         public static bool BlockPositionIsPassable(Vector3 pos)

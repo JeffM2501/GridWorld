@@ -106,6 +106,8 @@ namespace GridWorld.Test
            debug.Show(Color.Gray);
         }
 
+        protected WorldBuilder.FlatBuilder PerlinBuilder = null;
+
         public void SetupScene()
         {
             this.Renderer.TextureFilterMode = TextureFilterMode.Nearest;
@@ -116,8 +118,10 @@ namespace GridWorld.Test
 
             RootScene.CreateComponent<DebugRenderer>();
 
-            new WorldBuilder.FlatBuilder().Build(string.Empty, null);
+            PerlinBuilder = new WorldBuilder.FlatBuilder();
+            PerlinBuilder.BuildPerlin(string.Empty, null);
 
+            GeoLoadManager.NeedCluster += PerlinBuilder.EnqueCluster;
             SetupCamera();
 
             PlayerNode = RootScene.CreateChild("local_player");
@@ -217,6 +221,16 @@ namespace GridWorld.Test
         {
             if (Exiting)
                 return;
+
+            var newNodes = PerlinBuilder.PopNewClusters();
+            if (newNodes != null)
+            {
+                foreach (var newcluster in newNodes)
+                {
+                    var clusterNode = RootScene.CreateChild("Cluster" + newcluster.Origin.ToString());
+                    clusterNode.AddComponent(new ClusterInfo(newcluster));
+                }
+            }
 
             Geometry.LoadLimiter.UpdateFrame();
             GeoLoadManager.UpdateGeoForPosition(CameraNode.WorldPosition);

@@ -19,6 +19,11 @@ namespace GridWorld.Test.Components
         private object Locker = new object();
         private bool TryLoad = false;
 
+        private Node TimmerMarker = null;
+        private Node TimerOrigin = null;
+
+        private bool ShowTimers = true;
+
         public ClusterInfo (Cluster cluster)
         {
             TheCluster = cluster;
@@ -53,9 +58,6 @@ namespace GridWorld.Test.Components
             {
                 lock (Locker)
                     TryLoad = false;
-
-                Node.Position = new Vector3(TheCluster.Origin.H, 0, TheCluster.Origin.V);
-                Node.SetScale(1);
 
                 var geos = TheCluster.Geometry.BindToUrhoGeo();
 
@@ -102,7 +104,30 @@ namespace GridWorld.Test.Components
         public override void OnAttachedToNode(Node clusterNode)
         {
             base.OnAttachedToNode(clusterNode);
+
+            Node.Position = new Vector3(TheCluster.Origin.H, 0, TheCluster.Origin.V);
+            Node.SetScale(1);
+
             CheckLoad();
+
+            var NormalMaterial = Material.FromColor(Color.Blue);
+            var ErrorMaterial = Material.FromColor(Color.Red);
+
+            if (ShowTimers)
+            {
+                Node TimerOrigin = clusterNode.CreateChild();
+                var orginMesh = TimerOrigin.CreateComponent<StaticModel>();
+                orginMesh.Model = Urho.CoreAssets.Models.Box;
+                orginMesh.Material = ErrorMaterial;
+                TimerOrigin.Position = new Vector3(0, 24, 0); ;
+
+                TimmerMarker = TimerOrigin.CreateChild();
+                var tipMesh = TimmerMarker.CreateComponent<StaticModel>();
+                tipMesh.Model = Urho.CoreAssets.Models.Cone;
+                tipMesh.Material = NormalMaterial;
+                TimmerMarker.Rotation = Quaternion.FromAxisAngle(Vector3.UnitX, 180);
+                TimmerMarker.Position = new Vector3(0, 10, 0);
+            }
         }
 
         protected override void OnUpdate(float timeStep)
@@ -122,6 +147,14 @@ namespace GridWorld.Test.Components
                     TheCluster.DirtyGeo();
                 }
                 TheCluster.AliveCount = 0;
+            }
+
+            if (ShowTimers)
+            {
+                if (GeoModel == null && TheCluster.AliveCount > 0)
+                    TimmerMarker.Position = new Vector3(0, -1, 0);
+                else
+                    TimmerMarker.Position = new Vector3(0, TheCluster.AliveCount, 0);
             }
         }
     }

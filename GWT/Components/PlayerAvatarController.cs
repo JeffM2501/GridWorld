@@ -62,9 +62,11 @@ namespace GridWorld.Test.Components
         {
             base.OnUpdate(timeStep);
 
-            float moveSpeed = 10;
+            Vector3 oldPos = Node.Position;
+
+            float moveSpeed = 20;
             if (Application.Input.GetKeyDown(Key.Shift))
-                moveSpeed *= 2;
+                moveSpeed *= 5;
 
             if (Application.Input.GetKeyPress(Key.F1))
             {
@@ -118,7 +120,32 @@ namespace GridWorld.Test.Components
             {
                 float d = World.DropDepth(Node.Position.X, Node.Position.Z);
                 if (d != float.MinValue)
-                    Node.Position = new Vector3(Node.Position.X, d, Node.Position.Z);
+                {
+                    float actualD = Node.Position.Y;
+                    if (actualD > d)
+                    {
+                        // going down
+                        actualD -= timeStep * 8;
+                        if (actualD < d)
+                            actualD = d;
+                    }
+                    else if (actualD < d)
+                    {
+                        if (d - actualD > 2f)
+                        {
+                            Node.Position = oldPos;
+                            return;
+                        }
+                        // going up
+                        actualD += timeStep * 20;
+                        if (actualD > d)
+                            actualD = d;
+                    }
+
+
+                    Node.Position = new Vector3(Node.Position.X, actualD, Node.Position.Z);
+                }
+                    
             }
         }
     }

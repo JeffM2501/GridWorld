@@ -246,5 +246,24 @@ namespace GridWorld
 
             ClusterGeoRefresh?.Invoke(this,this);
         }
+
+        public float DropDepth(float positionH, float positionV)
+        {
+            Int64 x = (Int64)positionH;
+            Int64 y = (Int64)positionV;
+
+            float blockH = positionH - x;
+            float blockV = positionV - y;
+
+
+            for (Int64 d = Cluster.DSize - 1; d >= 0; d--)
+            {
+                float value = GetBlockRelative(x, y, d).GetDForLocalPosition(blockH, blockV);
+                if (value != float.MinValue)
+                    return d + value;
+            }
+
+            return float.MinValue;
+        }
     }
 }

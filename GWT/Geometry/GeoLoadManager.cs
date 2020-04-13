@@ -14,7 +14,7 @@ namespace GridWorld.Test.Geometry
 
         public static int ForceLoadRadius = 4;
 
-        private static bool UseThreads = true;
+        private static bool UseThreads = false;
 
         public static void GenerateGeometry(Cluster theCluster, object tag, GeoLoadCallback callback)
         {
@@ -33,20 +33,24 @@ namespace GridWorld.Test.Geometry
             }
         }
 
-        public delegate void CuslterPosCallback(int h, int v);
+        public delegate void CuslterPosCallback(ClusterPos pos);
         public static event CuslterPosCallback NeedCluster = null;
 
         public static float ClusterZombieTime = 10;
 
-        private static void ForceClusterLoad(ClusterPos origin, int h, int v)
+        private static void ForceClusterLoad(ClusterPos origin, int h, int v, bool display)
         {
-            var cluster = World.ClusterFromPosition(origin.Offset(h, v));
+            var newPos = origin.Offset(h, v);
+            var cluster = World.ClusterFromPosition(newPos);
             if (cluster == null)
             {
                 // it's off the current map, flag it for generation, another cycle will pick it up
-                NeedCluster?.Invoke(h, v);
+                NeedCluster?.Invoke(newPos);
                 return;
             }
+
+            if (!display)
+                return;
 
             cluster.AliveCount = ClusterZombieTime;
 
@@ -65,24 +69,24 @@ namespace GridWorld.Test.Geometry
             GeoLoadManager.GenerateGeometry(cluster, null, (c, t) => { LoadLimiter.AddLoadPriority(cluster.Origin); });
         }
 
-        private static void ForceRingLoad(int radius, ClusterPos origin)
+        private static void ForceRingLoad(int radius, ClusterPos origin, bool display)
         {
             int radUnits = radius * Cluster.HVSize;
             for (int i = 0; i <= radUnits; i+= Cluster.HVSize)
             {
-                ForceClusterLoad(origin, radUnits, i);
-                ForceClusterLoad(origin, -radUnits, i);
+                ForceClusterLoad(origin, radUnits, i, display);
+                ForceClusterLoad(origin, -radUnits, i, display);
 
-                ForceClusterLoad(origin, i, radUnits);
-                ForceClusterLoad(origin, i,-radUnits);
+                ForceClusterLoad(origin, i, radUnits, display);
+                ForceClusterLoad(origin, i,-radUnits, display);
 
                // if (i != 0)
                 {
-                    ForceClusterLoad(origin, radUnits, -i);
-                    ForceClusterLoad(origin, -radUnits, -i);
+                    ForceClusterLoad(origin, radUnits, -i, display);
+                    ForceClusterLoad(origin, -radUnits, -i, display);
 
-                    ForceClusterLoad(origin, -i, radUnits);
-                    ForceClusterLoad(origin, -i, -radUnits);
+                    ForceClusterLoad(origin, -i, radUnits, display);
+                    ForceClusterLoad(origin, -i, -radUnits, display);
                 }
             }
         }
@@ -93,11 +97,16 @@ namespace GridWorld.Test.Geometry
             if (rootCluster == null)
                 return;
 
-            ForceClusterLoad(rootCluster.Origin,0,0);
+            ForceClusterLoad(rootCluster.Origin,0,0, true);
 
             for (int i = 1; i <= ForceLoadRadius; i++)
             {
-                ForceRingLoad(i, rootCluster.Origin);
+                ForceRingLoad(i, rootCluster.Origin,true);
+            }
+
+            for (int i = ForceLoadRadius; i <= ForceLoadRadius*2; i++)
+            {
+                ForceRingLoad(i, rootCluster.Origin, false);
             }
         }
     }

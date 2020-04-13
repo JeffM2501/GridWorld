@@ -10,7 +10,7 @@ namespace GridWorld.Test.Geometry
     {
         private static int LoadCount = 0;
 
-        public static int LoadLimit = 3;
+        public static int LoadLimit = 16;
 
         private static List<ClusterPos> LoadPriority = new List<ClusterPos>();
 
