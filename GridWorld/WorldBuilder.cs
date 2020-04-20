@@ -70,6 +70,29 @@ namespace GridWorld
             public static int Red = World.BlockDef.EmptyID;
             public static int Tan = World.BlockDef.EmptyID;
 
+            private static ushort SolidStone = 0;
+            private static ushort SolidDirt = 0;
+            private static ushort SolidGrass = 0;
+            private static ushort FluidWater = 0;
+            private static ushort SolidDeepStone = 0;
+
+
+            private static ushort MakeBlock(int surface, Block.Geometries shape, Block.Directions dir = Block.Directions.None, byte minD = Block.ZeroHeight, byte maxD = Block.FullHeight, bool fluid = false)
+            {
+                var block = new Block(surface, shape);
+                block.Dir = dir;
+                block.MinHeight = minD;
+                block.MaxHeight = maxD;
+
+                if (fluid)
+                {
+                    block.Trasperant = true;
+                    block.Coolidable = false;
+                }
+
+                return World.AddBlock(block);
+            }
+
             public static void InitStandardBlocks()
             {
                 if (Dirt != World.BlockDef.EmptyID)
@@ -96,11 +119,16 @@ namespace GridWorld
                 Tan = World.AddBlockDef(new World.BlockDef("Tan", 7));
 
                 World.BlockDefs[Water].Transperant = true;
+
+                SolidStone = MakeBlock(Stone, Block.Geometries.Solid);
+                SolidDirt = MakeBlock(Dirt, Block.Geometries.Solid);
+                SolidGrass = MakeBlock(Grass, Block.Geometries.Solid);
+                SolidDeepStone = MakeBlock(DeepStone, Block.Geometries.Solid);
+                FluidWater = MakeBlock(Water, Block.Geometries.Solid, Block.Directions.None, Block.ZeroHeight, Block.OpenFluidHeight, true);
             }
 
-            public static void FillClusterDWithBlock(Cluster cluster, int D, int blockID, Block.Geometry geo)
+            public static void FillClusterDWithBlock(Cluster cluster, int D, ushort index)
             {
-                ushort index = World.AddBlock(new Block(blockID, geo));
                 for (Int64 h = 0; h < Cluster.HVSize; h++)
                 {
                     for (Int64 v = 0; v < Cluster.HVSize; v++)
@@ -108,18 +136,10 @@ namespace GridWorld
                 }
             }
 
-            public static void FillClusterDRangeWithBlock(Cluster cluster, int dMin, int dMax, int blockID, Block.Geometry geo)
+            public static void FillClusterDRangeWithBlock(Cluster cluster, int dMin, int dMax, ushort index)
             {
                 for (int d = dMin; d < dMax; d++)
-                    FillClusterDWithBlock(cluster, d, blockID, geo);
-            }
-
-            public static void FillClusterColumRangeWithBlock(Cluster cluster, Int64 h, Int64 v, int dMin, int dMax, int blockID, Block.Geometry geo)
-            {
-                ushort index = World.AddBlock(new Block(blockID, geo));
-
-                for (int d = dMin; d < dMax; d++)
-                    cluster.SetBlockRelative(h, v, d, index);
+                    FillClusterDWithBlock(cluster, d, index);
             }
 
             public static void FillClusterColumRangeWithBlock(Cluster cluster, Int64 h, Int64 v, int dMin, int dMax, ushort blockIndex)
@@ -128,10 +148,8 @@ namespace GridWorld
                     cluster.SetBlockRelative(h, v, d, blockIndex);
             }
 
-            public static void FillAreaWithBlock(Cluster cluster, Int64 minH, Int64 minV, Int64 maxH, Int64 maxV, int minD, int maxD, int blockID, Block.Geometry geo)
+            public static void FillAreaWithBlock(Cluster cluster, Int64 minH, Int64 minV, Int64 maxH, Int64 maxV, int minD, int maxD, ushort index)
             {
-                ushort index = World.AddBlock(new Block(blockID, geo));
-
                 for (int d = minD; d < maxD; d++)
                 {
                     for (Int64 h = minH; h < maxH; h++)
@@ -146,101 +164,107 @@ namespace GridWorld
             {
                 int dLevel = 0;
 
-                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 2, Stone, Block.Geometry.Solid);
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 2, SolidStone);
                 dLevel += 2;
 
-                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 4, Dirt, Block.Geometry.Solid);
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 4, SolidDirt);
                 dLevel += 4;
 
-                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 1, Grass, Block.Geometry.Solid);
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 1, SolidGrass);
                 dLevel++;
 
 
-                newCluster.SetBlockRelative(8, 8, dLevel - 1, new Block(Water, Block.Geometry.Fluid));
-                newCluster.SetBlockRelative(9, 8, dLevel - 1, new Block(Water, Block.Geometry.Fluid));
-                newCluster.SetBlockRelative(10, 8, dLevel - 1, new Block(Water, Block.Geometry.Fluid));
-                newCluster.SetBlockRelative(10, 9, dLevel - 1, new Block(Water, Block.Geometry.Fluid));
+                newCluster.SetBlockRelative(8, 8, dLevel - 1, FluidWater);
+                newCluster.SetBlockRelative(9, 8, dLevel - 1, FluidWater);
+                newCluster.SetBlockRelative(10, 8, dLevel - 1, FluidWater);
+                newCluster.SetBlockRelative(10, 9, dLevel - 1, FluidWater);
 
-                newCluster.SetBlockRelative(2, 10, dLevel, new Block(Stone, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(4, 10, dLevel, new Block(Stone, Block.Geometry.HalfLower));
-                newCluster.SetBlockRelative(6, 10, dLevel, new Block(Stone, Block.Geometry.HalfUpper));
+                newCluster.SetBlockRelative(2, 10, dLevel, SolidStone);
+                newCluster.SetBlockRelative(4, 10, dLevel, MakeBlock(Stone, Block.Geometries.Solid, Block.Directions.None, Block.ZeroHeight, Block.HalfHeight));
+                newCluster.SetBlockRelative(6, 10, dLevel, MakeBlock(Stone, Block.Geometries.Solid, Block.Directions.None, Block.HalfHeight, Block.FullHeight)); 
+                
 
-                newCluster.SetBlockRelative(2, 18, dLevel, new Block(Grass, Block.Geometry.NorthHalfLowerRamp));
-                newCluster.SetBlockRelative(4, 18, dLevel, new Block(Grass, Block.Geometry.SouthHalfLowerRamp));
-                newCluster.SetBlockRelative(6, 18, dLevel, new Block(Grass, Block.Geometry.EastHalfLowerRamp));
-                newCluster.SetBlockRelative(8, 18, dLevel, new Block(Grass, Block.Geometry.WestHalfLowerRamp));
+                newCluster.SetBlockRelative(2, 18, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.North, Block.ZeroHeight, Block.HalfHeight));
+                newCluster.SetBlockRelative(4, 18, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.South, Block.ZeroHeight, Block.HalfHeight));
+                newCluster.SetBlockRelative(6, 18, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.East, Block.ZeroHeight, Block.HalfHeight));
+                newCluster.SetBlockRelative(8, 18, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.West, Block.ZeroHeight, Block.HalfHeight));
 
-                newCluster.SetBlockRelative(2, 20, dLevel, new Block(Grass, Block.Geometry.NorthHalfUpperRamp));
-                newCluster.SetBlockRelative(4, 20, dLevel, new Block(Grass, Block.Geometry.SouthHalfUpperRamp));
-                newCluster.SetBlockRelative(6, 20, dLevel, new Block(Grass, Block.Geometry.EastHalfUpperRamp));
-                newCluster.SetBlockRelative(8, 20, dLevel, new Block(Grass, Block.Geometry.WestHalfUpperRamp));
+                newCluster.SetBlockRelative(2, 20, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.North, Block.HalfHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(4, 20, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.South, Block.HalfHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(6, 20, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.East, Block.HalfHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(8, 20, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.West, Block.HalfHeight, Block.FullHeight));
 
-                newCluster.SetBlockRelative(2, 2, dLevel + 2, new Block(Grass, Block.Geometry.Solid));
+                newCluster.SetBlockRelative(2, 2, dLevel + 2, SolidGrass);
 
 
-                newCluster.SetBlockRelative(16, 16, dLevel, new Block(Grass, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(16, 15, dLevel, new Block(Grass, Block.Geometry.NorthFullRamp));
-                newCluster.SetBlockRelative(16, 17, dLevel, new Block(Grass, Block.Geometry.SouthFullRamp));
-                newCluster.SetBlockRelative(15, 16, dLevel, new Block(Grass, Block.Geometry.EastFullRamp));
-                newCluster.SetBlockRelative(17, 16, dLevel, new Block(Grass, Block.Geometry.WestFullRamp));
+                newCluster.SetBlockRelative(16, 16, dLevel, SolidGrass);
+                newCluster.SetBlockRelative(16, 15, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.North, Block.ZeroHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(16, 17, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.South, Block.ZeroHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(15, 16, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.East, Block.ZeroHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(17, 16, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.West, Block.ZeroHeight, Block.FullHeight));
 
                 // make a hole 
-                FillAreaWithBlock(newCluster, 20, 16, 22, 25, dLevel - 1, dLevel + 1, World.BlockDef.EmptyID, Block.Geometry.Empty);
+                FillAreaWithBlock(newCluster, 20, 16, 22, 25, dLevel - 1, dLevel + 1, World.EmptyBlockIndex);
 
-                FillAreaWithBlock(newCluster, 20, 25, 22, 26, dLevel - 1, dLevel, Grass, Block.Geometry.NorthFullRamp);
-                FillAreaWithBlock(newCluster, 20, 15, 22, 16, dLevel - 1, dLevel, Grass, Block.Geometry.SouthFullRamp);
+                FillAreaWithBlock(newCluster, 20, 25, 22, 26, dLevel - 1, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.North, Block.ZeroHeight, Block.FullHeight));
+                FillAreaWithBlock(newCluster, 20, 15, 22, 16, dLevel - 1, dLevel, MakeBlock(Grass, Block.Geometries.Ramp, Block.Directions.South, Block.ZeroHeight, Block.FullHeight));
 
-                FillAreaWithBlock(newCluster, 25, 20, 28, 30, dLevel, dLevel + 5, Stone, Block.Geometry.Solid);
+                FillAreaWithBlock(newCluster, 25, 20, 28, 30, dLevel, dLevel + 5, SolidStone);
 
 
-                FillAreaWithBlock(newCluster, 8, 0, 16, 2, dLevel, dLevel + 5, Stone, Block.Geometry.Solid);
+                FillAreaWithBlock(newCluster, 8, 0, 16, 2, dLevel, dLevel + 5, SolidStone);
+
+                int xCenter = 1;
+                int yCetner = 1;
 
                 int dOffset = 4;
                 if (newCluster.Origin.H == 0 && newCluster.Origin.V == 0)
                     dOffset = 6;
-
-                newCluster.SetBlockRelative(0, 0, dLevel + dOffset, new Block(Blue, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(1, 0, dLevel + dOffset, new Block(Blue, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(2, 0, dLevel + dOffset, new Block(Blue, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(3, 0, dLevel + dOffset, new Block(Blue, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(3, 0, dLevel + dOffset + 1, new Block(Blue, Block.Geometry.WestFullRamp));
-
-                newCluster.SetBlockRelative(0, 1, dLevel + dOffset, new Block(Red, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(0, 2, dLevel + dOffset, new Block(Red, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(0, 3, dLevel + dOffset, new Block(Red, Block.Geometry.Solid));
-                newCluster.SetBlockRelative(0, 3, dLevel + dOffset + 1, new Block(Red, Block.Geometry.SouthFullRamp));
-
-                if (newCluster.Origin.H < 0)
+                if (useOrigin)
                 {
-                    newCluster.SetBlockRelative(16, 16, dLevel + dOffset, new Block(Grass, Block.Geometry.Solid));
+                    newCluster.SetBlockRelative(xCenter + 0, yCetner, dLevel + dOffset, MakeBlock(Blue, Block.Geometries.Solid));
+                    newCluster.SetBlockRelative(xCenter + 1, yCetner, dLevel + dOffset, MakeBlock(Blue, Block.Geometries.Solid));
+                    newCluster.SetBlockRelative(xCenter + 2, yCetner, dLevel + dOffset, MakeBlock(Blue, Block.Geometries.Solid));
+                    newCluster.SetBlockRelative(xCenter + 3, yCetner, dLevel + dOffset, MakeBlock(Blue, Block.Geometries.Solid));
+                    newCluster.SetBlockRelative(xCenter + 3, yCetner, dLevel + dOffset + 1, MakeBlock(Blue, Block.Geometries.Ramp, Block.Directions.West));
+
+                    newCluster.SetBlockRelative(xCenter, yCetner + 1, dLevel + dOffset, MakeBlock(Red, Block.Geometries.Solid));
+                    newCluster.SetBlockRelative(xCenter, yCetner + 2, dLevel + dOffset, MakeBlock(Red, Block.Geometries.Solid));
+                    newCluster.SetBlockRelative(xCenter, yCetner + 3, dLevel + dOffset, MakeBlock(Red, Block.Geometries.Solid));
+                    newCluster.SetBlockRelative(xCenter, yCetner + 3, dLevel + dOffset + 1, MakeBlock(Red, Block.Geometries.Ramp, Block.Directions.South));
                 }
 
-
-                if (newCluster.Origin.V < 0)
-                {
-                    newCluster.SetBlockRelative(16, 17, dLevel + dOffset, new Block(Stone, Block.Geometry.Solid));
-                }
+//                 if (newCluster.Origin.H < 0)
+//                 {
+//                     newCluster.SetBlockRelative(16, 16, dLevel + dOffset, new Block(Grass, Block.Geometries.Solid));
+//                 }
+//                 
+//                 
+//                 if (newCluster.Origin.V < 0)
+//                 {
+//                     newCluster.SetBlockRelative(16, 17, dLevel + dOffset, new Block(Stone, Block.Geometry.Solid));
+//                 }
             }
 
 
-            bool useOrigin = false;
+            bool useOrigin = true;
 
             protected void AddCrapToCluster2(Cluster newCluster)
             {
                 int dLevel = 0;
 
-                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 2, Stone, Block.Geometry.Solid);
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 2, SolidStone);
                 dLevel += 2;
 
-                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 4, Dirt, Block.Geometry.Solid);
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 4, SolidDirt);
                 dLevel += 4;
 
-                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 1, Grass, Block.Geometry.Solid);
+                FillClusterDRangeWithBlock(newCluster, dLevel, dLevel + 1, SolidGrass);
                 dLevel++;
 
                 // make a hole 
-                FillAreaWithBlock(newCluster, 2, 2, 30, 30, dLevel - 2, dLevel, Water, Block.Geometry.Fluid);
-                FillAreaWithBlock(newCluster, 14, 14, 18, 18, dLevel - 2, dLevel + 1, Stone, Block.Geometry.Solid);
+                FillAreaWithBlock(newCluster, 2, 2, 30, 30, dLevel - 2, dLevel, FluidWater);
+                FillAreaWithBlock(newCluster, 14, 14, 18, 18, dLevel - 2, dLevel + 1, SolidStone);
 
                 int xCenter = 16;
                 int yCetner = 16;
@@ -251,16 +275,16 @@ namespace GridWorld
 
                 if (useOrigin)
                 {
-                    newCluster.SetBlockRelative(xCenter + 0, yCetner, dLevel + dOffset, new Block(Blue, Block.Geometry.Solid));
-                    newCluster.SetBlockRelative(xCenter + 1, yCetner, dLevel + dOffset, new Block(Blue, Block.Geometry.Solid));
-                    newCluster.SetBlockRelative(xCenter + 2, yCetner, dLevel + dOffset, new Block(Blue, Block.Geometry.Solid));
-                    newCluster.SetBlockRelative(xCenter + 3, yCetner, dLevel + dOffset, new Block(Blue, Block.Geometry.Solid));
-                    newCluster.SetBlockRelative(xCenter + 3, yCetner, dLevel + dOffset + 1, new Block(Blue, Block.Geometry.WestFullRamp));
-
-                    newCluster.SetBlockRelative(xCenter, yCetner + 1, dLevel + dOffset, new Block(Red, Block.Geometry.Solid));
-                    newCluster.SetBlockRelative(xCenter, yCetner + 2, dLevel + dOffset, new Block(Red, Block.Geometry.Solid));
-                    newCluster.SetBlockRelative(xCenter, yCetner + 3, dLevel + dOffset, new Block(Red, Block.Geometry.Solid));
-                    newCluster.SetBlockRelative(xCenter, yCetner + 3, dLevel + dOffset + 1, new Block(Red, Block.Geometry.SouthFullRamp));
+                     newCluster.SetBlockRelative(xCenter + 0, yCetner, dLevel + dOffset, MakeBlock(Blue, Block.Geometries.Solid));
+                     newCluster.SetBlockRelative(xCenter + 1, yCetner, dLevel + dOffset, MakeBlock(Blue, Block.Geometries.Solid));
+                     newCluster.SetBlockRelative(xCenter + 2, yCetner, dLevel + dOffset, MakeBlock(Blue, Block.Geometries.Solid));
+                     newCluster.SetBlockRelative(xCenter + 3, yCetner, dLevel + dOffset, MakeBlock(Blue, Block.Geometries.Solid));
+                     newCluster.SetBlockRelative(xCenter + 3, yCetner, dLevel + dOffset + 1, MakeBlock(Blue, Block.Geometries.Ramp, Block.Directions.West));
+ 
+                     newCluster.SetBlockRelative(xCenter, yCetner + 1, dLevel + dOffset, MakeBlock(Red, Block.Geometries.Solid));
+                     newCluster.SetBlockRelative(xCenter, yCetner + 2, dLevel + dOffset, MakeBlock(Red, Block.Geometries.Solid));
+                     newCluster.SetBlockRelative(xCenter, yCetner + 3, dLevel + dOffset, MakeBlock(Red, Block.Geometries.Solid));
+                     newCluster.SetBlockRelative(xCenter, yCetner + 3, dLevel + dOffset + 1, MakeBlock(Red, Block.Geometries.Ramp, Block.Directions.South));
                 }
             }
 
@@ -268,8 +292,8 @@ namespace GridWorld
             {
                 InitStandardBlocks();
 
-                int HCount = 100;
-                int VCount = 100;
+                int HCount = 1;
+                int VCount = 1;
 
                 int hMin = 0;
                 if (HCount > 1)
@@ -288,7 +312,7 @@ namespace GridWorld
                     {
                         Cluster newCluster = new Cluster();
                         newCluster.Origin = new ClusterPos(h * Cluster.HVSize, v * Cluster.HVSize);
-                        AddCrapToCluster2(newCluster);
+                        AddCrapToCluster(newCluster);
                         newCluster.FinalizeGeneration();
                         World.Clusters.Add(newCluster.Origin, newCluster);
                     }
@@ -308,7 +332,8 @@ namespace GridWorld
                     {
                         Cluster newCluster = new Cluster();
                         newCluster.Origin = new ClusterPos(h * Cluster.HVSize, v * Cluster.HVSize);
-                        newCluster.SetBlockRelative(Cluster.HVSize / 2, Cluster.HVSize / 2, Cluster.DSize / 2, new Block(Water, Block.Geometry.Solid));
+                        newCluster.SetBlockRelative(Cluster.HVSize / 2, Cluster.HVSize / 2, Cluster.DSize / 2, SolidStone);
+                        newCluster.FinalizeGeneration();
                         World.Clusters.Add(newCluster.Origin, newCluster);
                     }
                 }
@@ -333,18 +358,18 @@ namespace GridWorld
                         double t = System.Math.Min(System.Math.Abs(HighPerlin.GetValue(x, 0.5, y)), 1.0);
 
                         int deep = (int)(d * 4) + 1;
-                        FillClusterColumRangeWithBlock(cluster, h, v, 0, deep, DeepStone, Block.Geometry.Solid);
+                        FillClusterColumRangeWithBlock(cluster, h, v, 0, deep, SolidDeepStone);
 
                         int mid = (int)(m * 6) + 4;
                         if (mid > deep)
-                            FillClusterColumRangeWithBlock(cluster, h, v, deep, mid, Stone, Block.Geometry.Solid);
+                            FillClusterColumRangeWithBlock(cluster, h, v, deep, mid, SolidStone);
 
                         int high = (int)(t * 13) + 4;
                         if (high > mid)
-                            FillClusterColumRangeWithBlock(cluster, h, v, mid, high, Dirt, Block.Geometry.Solid);
+                            FillClusterColumRangeWithBlock(cluster, h, v, mid, high, SolidDirt);
 
                         if (cluster.GetBlockRelative(h,v,high-1).DefID == Dirt)
-                            cluster.SetBlockRelative(h, v, high, World.AddBlock(new Block(Grass, Block.Geometry.Solid)));
+                            cluster.SetBlockRelative(h, v, high, SolidGrass);
 
 //                         double w = System.Math.Min(DeepPerlin.GetValue(x, 10, y), 0);
 //                         if (w < 0)
@@ -359,7 +384,7 @@ namespace GridWorld
                         float realTop = cluster.DropDepth(h, v);
                         if(realTop != float.MinValue && realTop < 6)
                         {
-                            FillClusterColumRangeWithBlock(cluster, h, v, (int)realTop, 6, World.AddBlock(new Block(Water,Block.Geometry.Fluid)));
+                            FillClusterColumRangeWithBlock(cluster, h, v, (int)realTop, 6, FluidWater);
                         }
 
                     }
