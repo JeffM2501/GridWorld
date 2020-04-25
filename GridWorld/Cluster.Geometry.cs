@@ -40,6 +40,12 @@ namespace GridWorld
             public MeshGroup() { }
             public MeshGroup(int ID) { TextureID = ID; }
 
+            public void Add(Face[] faces)
+            {
+                foreach (var face in faces)
+                    Add(face);
+            }
+
             public void Add(Face face)
             {
                 if (face.Verts == null)
@@ -291,17 +297,24 @@ namespace GridWorld
                 return true; // always default to true, because then we make the geo and there is no gap
             }
 
-            public static Vector2[] GetConstUVOffsets()
+            private static float SlopeVOffset(float delta)
             {
-                return new Vector2[4] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) };
+                return (1.0f - delta) * 0.5f;
             }
 
-            public static Face BuildAboveGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
+            public static Vector2[] GetConstUVOffsets( float delta )
             {
-                Face face = new Face();
+                return new Vector2[4] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1 - SlopeVOffset(delta)), new Vector2(0, 1 - SlopeVOffset(delta)) };
+            }
 
+            public static Face[] BuildAboveGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
+            {
+                List<Face> faces = new List<Face>();
+
+                Face face = new Face();
+                faces.Add(face);
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
-                face.UVs = GetConstUVOffsets();
+                face.UVs = GetConstUVOffsets(0);
 
                 float maxD = d + block.GetMaxD();
                 float minD = d + block.GetMinD();
@@ -311,7 +324,7 @@ namespace GridWorld
                 {
                     case Block.Geometries.Empty:
                     case Block.Geometries.Invisible:
-                        return Face.Empty;
+                        return new Face[0];
 
                     case Block.Geometries.Solid:
                         face.Normal = Vector3.UnitY;
@@ -319,11 +332,10 @@ namespace GridWorld
                         face.Verts[1] = new Vector3(h + 1, maxD, v);
                         face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
                         face.Verts[3] = new Vector3(h, maxD, v + 1);
+                        face.Normal = Vector3.UnitY;
                         break;
 
                     case Block.Geometries.Ramp:
-                        Vector3 rampVec;
-
                         switch (block.Dir)
                         {
                             case Block.Directions.North:
@@ -331,6 +343,9 @@ namespace GridWorld
                                 face.Verts[1] = new Vector3(h + 1, minD, v);
                                 face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
                                 face.Verts[3] = new Vector3(h, maxD, v + 1);
+
+                                face.Normal = Vector3.Cross(Vector3.UnitX, new Vector3(0, delta, 1));
+                                face.Normal.Normalize();
                                 break;
 
                             case Block.Directions.South:
@@ -338,6 +353,9 @@ namespace GridWorld
                                 face.Verts[1] = new Vector3(h + 1, maxD, v);
                                 face.Verts[2] = new Vector3(h + 1, minD, v + 1);
                                 face.Verts[3] = new Vector3(h, minD, v + 1);
+
+                                face.Normal = Vector3.Cross(Vector3.UnitX * -1.0f, new Vector3(0, delta, -1));
+                                face.Normal.Normalize();
                                 break;
 
                             case Block.Directions.East:
@@ -345,6 +363,9 @@ namespace GridWorld
                                 face.Verts[1] = new Vector3(h + 1, maxD, v);
                                 face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
                                 face.Verts[3] = new Vector3(h, minD, v + 1);
+
+                                face.Normal = Vector3.Cross(Vector3.UnitZ, new Vector3(1, delta, 0) );
+                                face.Normal.Normalize();
                                 break;
 
                             case Block.Directions.West:
@@ -352,16 +373,15 @@ namespace GridWorld
                                 face.Verts[1] = new Vector3(h + 1, minD, v);
                                 face.Verts[2] = new Vector3(h + 1, minD, v + 1);
                                 face.Verts[3] = new Vector3(h, maxD, v + 1);
+
+                                face.Normal = Vector3.Cross(Vector3.UnitZ * -1.0f, new Vector3(-1, delta, 0));
+                                face.Normal.Normalize();
                                 break;
                         }
-
-                        face.Normal = Vector3.UnitY;
                         break;
                 }
 
-                face.Normal.Normalize();
-
-                return face;
+                return faces.ToArray();
             }
 
             public static Face BuildBelowGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
@@ -373,7 +393,7 @@ namespace GridWorld
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = GetConstUVOffsets();
+                face.UVs = GetConstUVOffsets(0);
                 Array.Reverse(face.UVs);
                 face.Normal = Vector3.UnitY * -1.0f;
 
@@ -389,8 +409,6 @@ namespace GridWorld
                 return face;
             }
 
-            private static float RampCenterUOffset = 0.017f; //015625f;
-
             public static Face BuildNorthGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
                 Face face = new Face();
@@ -404,7 +422,7 @@ namespace GridWorld
                 float minD = d + block.GetMinD();
                 float delta = block.GetMaxD() - block.GetMinD();
 
-                face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
+                face.UVs = GetConstUVOffsets(delta);
 
                 switch (block.Geom)
                 {
@@ -459,8 +477,8 @@ namespace GridWorld
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
-                Array.Reverse(face.UVs);
+                face.UVs = GetConstUVOffsets(delta);
+
                 face.Normal = Vector3.UnitZ * -1;
 
                 switch (block.Geom)
@@ -477,6 +495,7 @@ namespace GridWorld
                             face.Verts[1] = new Vector3(h + 1, minD, v);
                             face.Verts[2] = new Vector3(h + 1, maxD, v);
                             face.Verts[3] = new Vector3(h, maxD, v);
+                            Array.Reverse(face.UVs);
                         }
                         else if (block.Dir != Block.Directions.North)
                         {
@@ -487,8 +506,6 @@ namespace GridWorld
                                     face.Verts[0] = new Vector3(h + 1, minD, v);
                                     face.Verts[1] = new Vector3(h, maxD, v);
                                     face.Verts[2] = new Vector3(h, minD, v);
-
-                                    face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
                                     face.Verts[3] = face.Verts[2];
                                     break;
 
@@ -497,8 +514,6 @@ namespace GridWorld
                                     face.Verts[0] = new Vector3(h + 1, maxD, v);
                                     face.Verts[1] = new Vector3(h, minD, v);
                                     face.Verts[2] = new Vector3(h + 1, minD, v);
- 
-                                    face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
 
                                     face.Verts[3] = face.Verts[2];
                                     break;
@@ -522,8 +537,8 @@ namespace GridWorld
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
-                //Array.Reverse(face.UVs);
+                face.UVs = GetConstUVOffsets(delta);
+                
                 face.Normal = Vector3.UnitX;
 
                 switch (block.Geom)
@@ -547,10 +562,9 @@ namespace GridWorld
                             {
                                 case Block.Directions.North:
                                 case Block.Directions.NorthEast:
-                                    face.Verts[0] = new Vector3(h + 1, minD, v + 1);
-                                    face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
-                                    face.Verts[2] = new Vector3(h + 1, minD, v);
-                 
+                                    face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
+                                    face.Verts[1] = new Vector3(h + 1, minD, v);
+                                    face.Verts[2] = new Vector3(h + 1, minD, v + 1);
                                     face.Verts[3] = face.Verts[2];
       
                                     break;
@@ -581,8 +595,8 @@ namespace GridWorld
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
-                Array.Reverse(face.UVs);
+                face.UVs = GetConstUVOffsets(delta);
+
                 face.Normal = Vector3.UnitX * -1.0f;
 
                 switch (block.Geom)
@@ -599,6 +613,7 @@ namespace GridWorld
                             face.Verts[2] = new Vector3(h, maxD, v);
                             face.Verts[3] = new Vector3(h, maxD, v + 1);
                             face.Verts[0] = new Vector3(h, minD, v + 1);
+                            Array.Reverse(face.UVs);
                         }
                         else if (block.Dir != Block.Directions.East)
                         {
@@ -611,7 +626,6 @@ namespace GridWorld
                                     face.Verts[2] = new Vector3(h, minD, v + 1);
 
                                     face.Verts[3] = face.Verts[2];
-                                    face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
                                     break;
 
                                 case Block.Directions.South:
@@ -621,8 +635,6 @@ namespace GridWorld
                                     face.Verts[2] = new Vector3(h, minD, v);
 
                                     face.Verts[3] = face.Verts[2];
-                                    face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
-
                                     break;
                             }
                         }
