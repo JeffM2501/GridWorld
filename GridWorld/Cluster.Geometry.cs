@@ -205,6 +205,9 @@ namespace GridWorld
                 if (thisGeo.Trasperant && otherGeo.Trasperant)
                     return false;
 
+                if (thisGeo.MaxHeight < Block.FullHeight ||  otherGeo.MinHeight > Block.ZeroHeight)
+                    return true;
+
                 return otherGeo.Trasperant || otherGeo.Geom == Block.Geometries.Empty || otherGeo.Geom == Block.Geometries.Invisible || (otherGeo.Geom == Block.Geometries.Solid && otherGeo.MinHeight > 0);
             }
 
@@ -234,6 +237,9 @@ namespace GridWorld
 
                 if (thisGeo.Trasperant && otherGeo.Trasperant)
                     return false;
+
+                if (otherGeo.MaxHeight < Block.FullHeight)
+                    return true;
 
                 if (otherGeo.Geom == Block.Geometries.Empty || otherGeo.Geom == Block.Geometries.Invisible)
                     return true;
@@ -429,9 +435,9 @@ namespace GridWorld
 
                                 case Block.Directions.West:
                                 case Block.Directions.NorthWest:
-                                    face.Verts[0] = new Vector3(h, d, v + 1);
-                                    face.Verts[1] = new Vector3(h, d + 1, v + 1);
-                                    face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                                    face.Verts[0] = new Vector3(h, maxD, v + 1);
+                                    face.Verts[1] = new Vector3(h + 1, minD, v + 1);
+                                    face.Verts[2] = new Vector3(h, minD, v + 1);
                                     face.Verts[3] = face.Verts[2];
                                     break;
                             }
@@ -478,17 +484,22 @@ namespace GridWorld
                             {
                                 case Block.Directions.West:
                                 case Block.Directions.SouthWest:
-                                    face.Verts[0] = new Vector3(h, minD, v + 1);
-                                    face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
-                                    face.Verts[2] = new Vector3(h + 1, minD, v + 1);
+                                    face.Verts[0] = new Vector3(h + 1, minD, v);
+                                    face.Verts[1] = new Vector3(h, maxD, v);
+                                    face.Verts[2] = new Vector3(h, minD, v);
+
+                                    face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
                                     face.Verts[3] = face.Verts[2];
                                     break;
 
                                 case Block.Directions.East:
                                 case Block.Directions.SouthEast:
-                                    face.Verts[0] = new Vector3(h, d, v + 1);
-                                    face.Verts[1] = new Vector3(h, d + 1, v + 1);
-                                    face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                                    face.Verts[0] = new Vector3(h + 1, maxD, v);
+                                    face.Verts[1] = new Vector3(h, minD, v);
+                                    face.Verts[2] = new Vector3(h + 1, minD, v);
+ 
+                                    face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
+
                                     face.Verts[3] = face.Verts[2];
                                     break;
                             }
@@ -536,17 +547,19 @@ namespace GridWorld
                             {
                                 case Block.Directions.North:
                                 case Block.Directions.NorthEast:
-                                    face.Verts[0] = new Vector3(h + 1, minD, v);
-                                    face.Verts[1] = new Vector3(h + 1, minD, v + 1);
-                                    face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
+                                    face.Verts[0] = new Vector3(h + 1, minD, v + 1);
+                                    face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
+                                    face.Verts[2] = new Vector3(h + 1, minD, v);
+                 
                                     face.Verts[3] = face.Verts[2];
+      
                                     break;
 
-                                case Block.Directions.East:
+                                case Block.Directions.South:
                                 case Block.Directions.SouthEast:
-                                    face.Verts[0] = new Vector3(h + 1, minD, v);
-                                    face.Verts[1] = new Vector3(h + 1, minD, v + 1);
-                                    face.Verts[2] = new Vector3(h + 1, maxD, v);
+                                    face.Verts[0] = new Vector3(h + 1, minD, v + 1);
+                                    face.Verts[1] = new Vector3(h + 1, maxD, v);
+                                    face.Verts[2] = new Vector3(h + 1, minD, v);
                                     face.Verts[3] = face.Verts[2];
                                     break;
                             }
@@ -593,18 +606,23 @@ namespace GridWorld
                             {
                                 case Block.Directions.North:
                                 case Block.Directions.NorthWest:
-                                    face.Verts[0] = new Vector3(h, d, v + 1);
-                                    face.Verts[1] = new Vector3(h, d, v);
-                                    face.Verts[2] = new Vector3(h, d + 1, v + 1);
+                                    face.Verts[0] = new Vector3(h, minD, v);
+                                    face.Verts[1] = new Vector3(h, maxD, v + 1);
+                                    face.Verts[2] = new Vector3(h, minD, v + 1);
+
                                     face.Verts[3] = face.Verts[2];
+                                    face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
                                     break;
 
                                 case Block.Directions.South:
                                 case Block.Directions.SouthEast:
-                                    face.Verts[0] = new Vector3(h, d, v);
-                                    face.Verts[1] = new Vector3(h, d + 1, v);
-                                    face.Verts[2] = new Vector3(h, d, v + 1);
+                                    face.Verts[0] = new Vector3(h, maxD, v); 
+                                    face.Verts[1] = new Vector3(h, minD, v + 1);
+                                    face.Verts[2] = new Vector3(h, minD, v);
+
                                     face.Verts[3] = face.Verts[2];
+                                    face.UVs = new Vector2[4] { new Vector2(0, 1.0f - delta), new Vector2(1, 1.0f - delta), new Vector2(1, 1), new Vector2(0, 1) };
+
                                     break;
                             }
                         }
