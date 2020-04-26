@@ -13,7 +13,8 @@ namespace GridWorld
             Empty,
             Invisible,
             Solid,
-            Ramp,
+            FullRamp,
+            LowerRamp,
         }
 
         public Geometries Geom = Geometries.Empty;
@@ -39,6 +40,7 @@ namespace GridWorld
         public const byte HalfHeight = 4;
         public const byte QuarterHeight = 2;
         public const byte ZeroHeight = 0;
+        public const byte BlockHeightIncrement = 1;
 
         public byte MinHeight = ZeroHeight;
         public byte MaxHeight = FullHeight;
@@ -87,7 +89,8 @@ namespace GridWorld
                 case Block.Geometries.Invisible:
                     return max;
 
-                case Block.Geometries.Ramp:
+                case Block.Geometries.FullRamp:
+                case Block.Geometries.LowerRamp:
                     switch (Dir)
                     {
                         case Directions.North:
