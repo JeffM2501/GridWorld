@@ -119,10 +119,9 @@ namespace GridWorld.Test
             RootScene.CreateComponent<DebugRenderer>();
 
             PerlinBuilder = new WorldBuilder.FlatBuilder();
-            PerlinBuilder.Build(string.Empty, null);
-            //ClusterGeometry.GeometryBuilder.DoBuildGeometry();
+            PerlinBuilder.BuildPerlin(string.Empty, null);
 
-          //  GeoLoadManager.NeedCluster += PerlinBuilder.EnqueCluster;
+            GeoLoadManager.NeedCluster += PerlinBuilder.EnqueCluster;
             SetupCamera();
 
             PlayerNode = RootScene.CreateChild("local_player");
