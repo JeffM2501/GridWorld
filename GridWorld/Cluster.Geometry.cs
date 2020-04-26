@@ -227,7 +227,7 @@ namespace GridWorld
 
             private static bool BellowIsOpen(Block thisGeo, Block otherGeo)
             {
-                if (thisGeo.GetMinD() > 0)
+                if (thisGeo.Geom != Block.Geometries.LowerRamp && thisGeo.GetMinD() > 0)
                     return true;
 
                 if (otherGeo == Block.Invalid || otherGeo.Geom == Block.Geometries.Solid)
@@ -245,28 +245,28 @@ namespace GridWorld
                 return otherGeo.MaxHeight < 1;
             }
 
-            private static Block.Directions GetOppositeDir(Block.Directions dir)
+            private static Directions GetOppositeDir(Directions dir)
             {
                 switch(dir)
                 {
                     default:
-                        return Block.Directions.None;
+                        return Directions.None;
 
-                    case Block.Directions.North:
-                        return Block.Directions.South;
+                    case Directions.North:
+                        return Directions.South;
 
-                    case Block.Directions.South:
-                        return Block.Directions.North;
+                    case Directions.South:
+                        return Directions.North;
 
-                    case Block.Directions.East:
-                        return Block.Directions.West;
+                    case Directions.East:
+                        return Directions.West;
 
-                    case Block.Directions.West:
-                        return Block.Directions.East;
+                    case Directions.West:
+                        return Directions.East;
                 }
             }
 
-            private static bool DirectionIsOpen(Block thisGeo, Block otherGeo, Block.Directions dir)
+            private static bool DirectionIsOpen(Block thisGeo, Block otherGeo, Directions dir)
             {
                 if (otherGeo == Block.Invalid)
                     return false;
@@ -277,12 +277,103 @@ namespace GridWorld
                 if (otherGeo.Geom == Block.Geometries.Empty || otherGeo.Geom == Block.Geometries.Invisible)
                     return true;
 
-                if (otherGeo.MinHeight > thisGeo.MinHeight || otherGeo.MaxHeight < thisGeo.MaxHeight)
-                    return true; // there is some kind of gap, no mater the shape, so draw our side
+//                 if (otherGeo.MinHeight > thisGeo.MinHeight || otherGeo.MaxHeight < thisGeo.MaxHeight)
+//                     return true; // there is some kind of gap, no mater the shape, so draw our side
 
                 if (otherGeo.Geom == Block.Geometries.Solid && otherGeo.MaxHeight >= thisGeo.MaxHeight) // it is more solid than us
                      return false;
 
+                // cascading lower ramps
+                if (thisGeo.Geom == Block.Geometries.LowerRamp && otherGeo.Geom == Block.Geometries.LowerRamp)
+                {
+                    switch(dir)
+                    {
+                        case Directions.North:
+                            if (thisGeo.Dir == Directions.North)
+                            {
+                                if (otherGeo.Dir == Directions.North)
+                                    return otherGeo.MinHeight != thisGeo.MaxHeight;
+                                if (otherGeo.Dir == Directions.South)
+                                    return otherGeo.MaxHeight != thisGeo.MaxHeight;
+                            }
+                            if (thisGeo.Dir == Directions.South)
+                            {
+                                if (otherGeo.Dir == Directions.South)
+                                    return otherGeo.MaxHeight != thisGeo.MinHeight;
+                                if (otherGeo.Dir == Directions.North)
+                                    return otherGeo.MinHeight != thisGeo.MinHeight;
+                            }
+                            break;
+
+                        case Directions.South:
+                            if (thisGeo.Dir == Directions.South)
+                            {
+                                if (otherGeo.Dir == Directions.South)
+                                    return otherGeo.MinHeight != thisGeo.MaxHeight;
+                                if (otherGeo.Dir == Directions.North)
+                                    return otherGeo.MaxHeight != thisGeo.MaxHeight;
+                            }
+                            if (thisGeo.Dir == Directions.North)
+                            {
+                                if (otherGeo.Dir == Directions.North)
+                                    return otherGeo.MaxHeight != thisGeo.MinHeight;
+                                if (otherGeo.Dir == Directions.South)
+                                    return otherGeo.MinHeight != thisGeo.MinHeight;
+                            }
+                            break;
+
+                        case Directions.East:
+                            if (thisGeo.Dir == Directions.East)
+                            {
+                                if (otherGeo.Dir == Directions.East)
+                                    return otherGeo.MinHeight != thisGeo.MaxHeight;
+                                if (otherGeo.Dir == Directions.West)
+                                    return otherGeo.MaxHeight != thisGeo.MaxHeight;
+                            }
+                            if (thisGeo.Dir == Directions.West)
+                            {
+                                if (otherGeo.Dir == Directions.West)
+                                    return otherGeo.MaxHeight != thisGeo.MinHeight;
+                                if (otherGeo.Dir == Directions.East)
+                                    return otherGeo.MinHeight != thisGeo.MinHeight;
+                            }
+                            break;
+
+                        case Directions.West:
+                            if (thisGeo.Dir == Directions.West)
+                            {
+                                if (otherGeo.Dir == Directions.West)
+                                    return otherGeo.MinHeight != thisGeo.MaxHeight;
+                                if (otherGeo.Dir == Directions.East)
+                                    return otherGeo.MaxHeight != thisGeo.MaxHeight;
+                            }
+                            if (thisGeo.Dir == Directions.East)
+                            {
+                                if (otherGeo.Dir == Directions.East)
+                                    return otherGeo.MaxHeight != thisGeo.MinHeight;
+                                if (otherGeo.Dir == Directions.West)
+                                    return otherGeo.MinHeight != thisGeo.MinHeight;
+                            }
+                            break;
+                    }
+                   
+                }
+
+                // cascading lower to full ramp
+                if (thisGeo.Geom == Block.Geometries.LowerRamp && otherGeo.Geom == Block.Geometries.FullRamp && otherGeo.MinHeight == Block.ZeroHeight)
+                {
+                    var opposite = GetOppositeDir(dir);
+                    if (thisGeo.Dir == opposite && thisGeo.Dir == otherGeo.Dir && otherGeo.MaxHeight == thisGeo.MinHeight)
+                        return false;
+                }
+
+                if (thisGeo.Geom == Block.Geometries.FullRamp && otherGeo.Geom == Block.Geometries.LowerRamp && thisGeo.MinHeight == Block.ZeroHeight)
+                {
+                    if (thisGeo.Dir == dir && thisGeo.Dir == otherGeo.Dir && thisGeo.MaxHeight == otherGeo.MinHeight)
+                        return false;
+                }
+
+                // identical ramps
                 if (thisGeo.MaxHeight == otherGeo.MaxHeight && thisGeo.MinHeight == otherGeo.MinHeight)
                 {
                     if (thisGeo.Geom == Block.Geometries.Solid && otherGeo.Geom == Block.Geometries.Solid)
@@ -296,67 +387,67 @@ namespace GridWorld
                     {
                         switch (dir)
                         {
-                            case Block.Directions.North:
+                            case Directions.North:
                                 switch (thisGeo.Dir)
                                 {
-                                    case Block.Directions.North:
-                                        return otherGeo.Dir != Block.Directions.South;
+                                    case Directions.North:
+                                        return otherGeo.Dir != Directions.South;
 
-                                    case Block.Directions.NorthEast:
-                                    case Block.Directions.East:
-                                        return otherGeo.Dir != Block.Directions.East && otherGeo.Dir != Block.Directions.SouthEast;
+                                    case Directions.NorthEast:
+                                    case Directions.East:
+                                        return otherGeo.Dir != Directions.East && otherGeo.Dir != Directions.SouthEast;
 
-                                    case Block.Directions.NorthWest:
-                                    case Block.Directions.West:
-                                        return otherGeo.Dir != Block.Directions.West && otherGeo.Dir != Block.Directions.SouthWest;
+                                    case Directions.NorthWest:
+                                    case Directions.West:
+                                        return otherGeo.Dir != Directions.West && otherGeo.Dir != Directions.SouthWest;
                                 }
                                 break;
 
-                            case Block.Directions.South:
+                            case Directions.South:
                                 switch (thisGeo.Dir)
                                 {
-                                    case Block.Directions.South:
-                                        return otherGeo.Dir != Block.Directions.North;
+                                    case Directions.South:
+                                        return otherGeo.Dir != Directions.North;
 
-                                    case Block.Directions.SouthEast:
-                                    case Block.Directions.East:
-                                        return otherGeo.Dir != Block.Directions.East && otherGeo.Dir != Block.Directions.NorthEast;
+                                    case Directions.SouthEast:
+                                    case Directions.East:
+                                        return otherGeo.Dir != Directions.East && otherGeo.Dir != Directions.NorthEast;
 
-                                    case Block.Directions.SouthWest:
-                                    case Block.Directions.West:
-                                        return otherGeo.Dir != Block.Directions.West && otherGeo.Dir != Block.Directions.NorthWest;
+                                    case Directions.SouthWest:
+                                    case Directions.West:
+                                        return otherGeo.Dir != Directions.West && otherGeo.Dir != Directions.NorthWest;
                                 }
                                 break;
 
-                            case Block.Directions.East:
+                            case Directions.East:
                                 switch (thisGeo.Dir)
                                 {
-                                    case Block.Directions.East:
-                                        return otherGeo.Dir != Block.Directions.West;
+                                    case Directions.East:
+                                        return otherGeo.Dir != Directions.West;
 
-                                    case Block.Directions.NorthEast:
-                                    case Block.Directions.North:
-                                        return otherGeo.Dir != Block.Directions.North && otherGeo.Dir != Block.Directions.NorthWest;
+                                    case Directions.NorthEast:
+                                    case Directions.North:
+                                        return otherGeo.Dir != Directions.North && otherGeo.Dir != Directions.NorthWest;
 
-                                    case Block.Directions.SouthEast:
-                                    case Block.Directions.South:
-                                        return otherGeo.Dir != Block.Directions.South && otherGeo.Dir != Block.Directions.SouthWest;
+                                    case Directions.SouthEast:
+                                    case Directions.South:
+                                        return otherGeo.Dir != Directions.South && otherGeo.Dir != Directions.SouthWest;
                                 }
                                 break;
 
-                            case Block.Directions.West:
+                            case Directions.West:
                                 switch (thisGeo.Dir)
                                 {
-                                    case Block.Directions.West:
-                                        return otherGeo.Dir != Block.Directions.East;
+                                    case Directions.West:
+                                        return otherGeo.Dir != Directions.East;
 
-                                    case Block.Directions.SouthWest:
-                                    case Block.Directions.South:
-                                        return otherGeo.Dir != Block.Directions.South && otherGeo.Dir != Block.Directions.SouthEast;
+                                    case Directions.SouthWest:
+                                    case Directions.South:
+                                        return otherGeo.Dir != Directions.South && otherGeo.Dir != Directions.SouthEast;
 
-                                    case Block.Directions.NorthWest:
-                                    case Block.Directions.North:
-                                        return otherGeo.Dir != Block.Directions.North && otherGeo.Dir != Block.Directions.NorthEast;
+                                    case Directions.NorthWest:
+                                    case Directions.North:
+                                        return otherGeo.Dir != Directions.North && otherGeo.Dir != Directions.NorthEast;
                                 }
                                 break;
 
@@ -386,7 +477,7 @@ namespace GridWorld
                 return new Vector2[4] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1 - SlopeVOffset(farDelta)), new Vector2(0, 1 - SlopeVOffset(nearDelta)) };
             }
 
-            public static void SetTopVectorForDir(ref Vector3 norm, Block.Directions dir, float delta)
+            public static void SetTopVectorForDir(ref Vector3 norm, Directions dir, float delta)
             {
                 norm = Vector3.UnitY;
                 switch (dir)
@@ -394,19 +485,19 @@ namespace GridWorld
                     default:
                         return;
 
-                    case Block.Directions.North:
+                    case Directions.North:
                         norm = Vector3.Cross(Vector3.UnitX * -1, new Vector3(0, delta, 1));
                         break;
 
-                    case Block.Directions.South:
+                    case Directions.South:
                         norm = Vector3.Cross(Vector3.UnitX, new Vector3(0, delta, -1));
                         break;
 
-                    case Block.Directions.East:
+                    case Directions.East:
                         norm = Vector3.Cross(Vector3.UnitZ, new Vector3(1, delta, 0));
                         break;
 
-                    case Block.Directions.West:
+                    case Directions.West:
                         norm = Vector3.Cross(Vector3.UnitZ * -1.0f, new Vector3(-1, delta, 0));
                         break;
                 }
@@ -439,14 +530,14 @@ namespace GridWorld
                         face.Verts[1] = new Vector3(h + 1, maxD, v);
                         face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
                         face.Verts[3] = new Vector3(h, maxD, v + 1);
-                        SetTopVectorForDir(ref face.Normal,Block.Directions.None,0);
+                        SetTopVectorForDir(ref face.Normal,Directions.None,0);
                         break;
 
                     case Block.Geometries.FullRamp:
                     case Block.Geometries.LowerRamp:
                         switch (block.Dir)
                         {
-                            case Block.Directions.North:
+                            case Directions.North:
                                 face.Verts[0] = new Vector3(h, minD, v);
                                 face.Verts[1] = new Vector3(h + 1, minD, v);
                                 face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
@@ -455,7 +546,7 @@ namespace GridWorld
                                 SetTopVectorForDir(ref face.Normal, block.Dir, delta);
                                 break;
 
-                            case Block.Directions.South:
+                            case Directions.South:
                                 face.Verts[0] = new Vector3(h, maxD, v);
                                 face.Verts[1] = new Vector3(h + 1, maxD, v);
                                 face.Verts[2] = new Vector3(h + 1, minD, v + 1);
@@ -464,7 +555,7 @@ namespace GridWorld
                                 SetTopVectorForDir(ref face.Normal, block.Dir, delta);
                                 break;
 
-                            case Block.Directions.East:
+                            case Directions.East:
                                 face.Verts[0] = new Vector3(h, minD, v);
                                 face.Verts[1] = new Vector3(h + 1, maxD, v);
                                 face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
@@ -473,7 +564,7 @@ namespace GridWorld
                                 SetTopVectorForDir(ref face.Normal, block.Dir, delta);
                                 break;
 
-                            case Block.Directions.West:
+                            case Directions.West:
                                 face.Verts[0] = new Vector3(h, maxD, v);
                                 face.Verts[1] = new Vector3(h + 1, minD, v);
                                 face.Verts[2] = new Vector3(h + 1, minD, v + 1);
@@ -482,13 +573,13 @@ namespace GridWorld
                                 SetTopVectorForDir(ref face.Normal, block.Dir, delta);
                                 break;
 
-                            case Block.Directions.NorthEast:
+                            case Directions.NorthEast:
                                 // south lower to north higher face
                                 face.Verts[0] = new Vector3(h, minD, v);
                                 face.Verts[1] = new Vector3(h + 1, minD, v);
                                 face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
                                 face.Verts[3] = face.Verts[2];
-                                SetTopVectorForDir(ref face.Normal, Block.Directions.North, delta);
+                                SetTopVectorForDir(ref face.Normal, Directions.North, delta);
   
                                 // west lower to east higher
                                 face = new Face();
@@ -501,10 +592,10 @@ namespace GridWorld
                                 face.Verts[2] = new Vector3(h, minD, v + 1);
                                 face.Verts[3] = face.Verts[2];
 
-                                SetTopVectorForDir(ref face.Normal, Block.Directions.East, delta);
+                                SetTopVectorForDir(ref face.Normal, Directions.East, delta);
                                 break;
 
-                            case Block.Directions.NorthWest:
+                            case Directions.NorthWest:
                                 // south lower to north higher face
                                 face.Verts[0] = new Vector3(h, minD, v);
                                 face.Verts[1] = new Vector3(h + 1, minD, v);
@@ -513,7 +604,7 @@ namespace GridWorld
 
                                 face.UVs = new Vector2[4] { new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 0), new Vector2(1, 0) };
 
-                                SetTopVectorForDir(ref face.Normal, Block.Directions.North, delta);
+                                SetTopVectorForDir(ref face.Normal, Directions.North, delta);
 
                                 // east lower to west higher face
                                 face = new Face();
@@ -525,10 +616,10 @@ namespace GridWorld
                                 face.Verts[1] = new Vector3(h+1, minD, v + 1);
                                 face.Verts[2] = new Vector3(h, maxD, v+1);
                                 face.Verts[3] = face.Verts[2];
-                                SetTopVectorForDir(ref face.Normal, Block.Directions.West, delta);
+                                SetTopVectorForDir(ref face.Normal, Directions.West, delta);
                                 break;
 
-                            case Block.Directions.SouthEast:
+                            case Directions.SouthEast:
                                  // west lower to east higher face
                                 face.Verts[0] = new Vector3(h, minD, v);
                                 face.Verts[1] = new Vector3(h + 1, maxD, v);
@@ -536,7 +627,7 @@ namespace GridWorld
                                 face.Verts[3] = face.Verts[2];
 
                                 face.UVs = new Vector2[4] { new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 0), new Vector2(1, 0) };
-                                SetTopVectorForDir(ref face.Normal, Block.Directions.East, delta);
+                                SetTopVectorForDir(ref face.Normal, Directions.East, delta);
 
                                 // north lower to south higher face
                                 face = new Face();
@@ -549,17 +640,17 @@ namespace GridWorld
                                 face.Verts[2] = new Vector3(h, minD, v + 1);
                                 face.Verts[3] = face.Verts[2];
 
-                                SetTopVectorForDir(ref face.Normal, Block.Directions.South, delta);
+                                SetTopVectorForDir(ref face.Normal, Directions.South, delta);
                                 break;
 
-                            case Block.Directions.SouthWest:
+                            case Directions.SouthWest:
                                 // north lower to south higher face
                                 face.Verts[0] = new Vector3(h, maxD, v);
                                 face.Verts[1] = new Vector3(h + 1, minD, v+1);
                                 face.Verts[2] = new Vector3(h, minD, v + 1);
                                 face.Verts[3] = face.Verts[2];
 
-                                SetTopVectorForDir(ref face.Normal, Block.Directions.South, delta);
+                                SetTopVectorForDir(ref face.Normal, Directions.South, delta);
 
                                 // east lower to west higher face
                                 face = new Face();
@@ -572,7 +663,7 @@ namespace GridWorld
                                 face.Verts[2] = new Vector3(h + 1, minD, v + 1);
                                 face.Verts[3] = face.Verts[2];
 
-                                SetTopVectorForDir(ref face.Normal, Block.Directions.West, delta);
+                                SetTopVectorForDir(ref face.Normal, Directions.West, delta);
                                 break;
 
                         }
@@ -595,9 +686,10 @@ namespace GridWorld
                 Array.Reverse(face.UVs);
                 face.Normal = Vector3.UnitY * -1.0f;
 
-                float maxD = d + block.GetMaxD();
-                float minD = d + block.GetMinD();
-                float delta = block.GetMaxD() - block.GetMinD();
+                float minD = d;
+
+                if (block.Geom != Block.Geometries.LowerRamp)
+                    minD = d + block.GetMinD();
 
                 face.Verts[0] = new Vector3(h, minD, v);
                 face.Verts[1] = new Vector3(h, minD, v + 1);
@@ -630,27 +722,27 @@ namespace GridWorld
 
                     case Block.Geometries.Solid:
                     case Block.Geometries.FullRamp:
-                        if (block.Geom == Block.Geometries.Solid || block.Dir == Block.Directions.North)
+                        if (block.Geom == Block.Geometries.Solid || block.Dir == Directions.North)
                         {
                             face.Verts[3] = new Vector3(h, minD, v + 1);
                             face.Verts[0] = new Vector3(h, maxD, v + 1);
                             face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
                             face.Verts[2] = new Vector3(h + 1, minD, v + 1);
                         }
-                        else if (block.Dir != Block.Directions.South)
+                        else if (block.Dir != Directions.South)
                         {
                             switch (block.Dir)
                             {
-                                case Block.Directions.East:
-                                case Block.Directions.NorthEast:
+                                case Directions.East:
+                                case Directions.NorthEast:
                                     face.Verts[0] = new Vector3(h, minD, v + 1);
                                     face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
                                     face.Verts[2] = new Vector3(h + 1, minD, v + 1);
                                     face.Verts[3] = face.Verts[2];
                                     break;
 
-                                case Block.Directions.West:
-                                case Block.Directions.NorthWest:
+                                case Directions.West:
+                                case Directions.NorthWest:
                                     face.Verts[0] = new Vector3(h, maxD, v + 1);
                                     face.Verts[1] = new Vector3(h + 1, minD, v + 1);
                                     face.Verts[2] = new Vector3(h, minD, v + 1);
@@ -668,7 +760,7 @@ namespace GridWorld
                     case Block.Geometries.LowerRamp:
                         switch(block.Dir)
                         {
-                            case Block.Directions.North:
+                            case Directions.North:
                                 face.Verts[3] = new Vector3(h, d, v + 1);
                                 face.Verts[0] = new Vector3(h, maxD, v + 1);
                                 face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
@@ -676,7 +768,9 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(1);
                                 break;
 
-                            case Block.Directions.South:
+                            case Directions.South:
+                            case Directions.SouthEast:
+                            case Directions.SouthWest:
                                 face.Verts[3] = new Vector3(h, d, v + 1);
                                 face.Verts[0] = new Vector3(h, minD, v + 1);
                                 face.Verts[1] = new Vector3(h + 1, minD, v + 1);
@@ -684,7 +778,8 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(1);
                                 break;
 
-                            case Block.Directions.East:
+                            case Directions.East:
+                            case Directions.NorthEast:
                                 face.Verts[3] = new Vector3(h, d, v + 1);
                                 face.Verts[0] = new Vector3(h, minD, v + 1);
                                 face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
@@ -692,13 +787,14 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(minD - d, maxD - d);
                                 break;
 
-                            case Block.Directions.West:
+                            case Directions.West:
+                            case Directions.NorthWest:
                                 face.Verts[3] = new Vector3(h, d, v + 1);
                                 face.Verts[0] = new Vector3(h, maxD, v + 1);
                                 face.Verts[1] = new Vector3(h + 1, minD, v + 1);
                                 face.Verts[2] = new Vector3(h + 1, d, v + 1);
                                 face.UVs = GetConstUVOffsets(maxD - d, minD - d);
-                                break;
+                                break;   
                         }
                         break;
                 }
@@ -727,7 +823,7 @@ namespace GridWorld
 
                     case Block.Geometries.Solid:
                     case Block.Geometries.FullRamp:
-                        if (block.Geom == Block.Geometries.Solid || block.Dir == Block.Directions.South)
+                        if (block.Geom == Block.Geometries.Solid || block.Dir == Directions.South)
                         {
                             face.Verts[0] = new Vector3(h, minD, v);
                             face.Verts[1] = new Vector3(h + 1, minD, v);
@@ -735,20 +831,20 @@ namespace GridWorld
                             face.Verts[3] = new Vector3(h, maxD, v);
                             Array.Reverse(face.UVs);
                         }
-                        else if (block.Dir != Block.Directions.North)
+                        else if (block.Dir != Directions.North)
                         {
                             switch (block.Dir)
                             {
-                                case Block.Directions.West:
-                                case Block.Directions.SouthWest:
+                                case Directions.West:
+                                case Directions.SouthWest:
                                     face.Verts[0] = new Vector3(h + 1, minD, v);
                                     face.Verts[1] = new Vector3(h, maxD, v);
                                     face.Verts[2] = new Vector3(h, minD, v);
                                     face.Verts[3] = face.Verts[2];
                                     break;
 
-                                case Block.Directions.East:
-                                case Block.Directions.SouthEast:
+                                case Directions.East:
+                                case Directions.SouthEast:
                                     face.Verts[0] = new Vector3(h + 1, maxD, v);
                                     face.Verts[1] = new Vector3(h, minD, v);
                                     face.Verts[2] = new Vector3(h + 1, minD, v);
@@ -767,7 +863,9 @@ namespace GridWorld
                     case Block.Geometries.LowerRamp:
                         switch (block.Dir)
                         {
-                            case Block.Directions.North:
+                            case Directions.North:
+                            case Directions.NorthEast:
+                            case Directions.NorthWest:
                                 face.Verts[0] = new Vector3(h + 1, minD, v);
                                 face.Verts[1] = new Vector3(h, minD, v);
                                 face.Verts[2] = new Vector3(h, d, v);
@@ -775,7 +873,7 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(minD-d);
                                 break;
 
-                            case Block.Directions.South:
+                            case Directions.South:
                                 face.Verts[0] = new Vector3(h + 1, maxD, v);
                                 face.Verts[1] = new Vector3(h, maxD, v);
                                 face.Verts[2] = new Vector3(h, d, v);
@@ -783,7 +881,8 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(1);
                                 break;
 
-                            case Block.Directions.East:
+                            case Directions.East:
+                            case Directions.SouthEast:
                                 face.Verts[0] = new Vector3(h + 1, maxD, v);
                                 face.Verts[1] = new Vector3(h, minD, v);
                                 face.Verts[2] = new Vector3(h, d, v);
@@ -791,7 +890,8 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(maxD - d, minD - d);
                                 break;
 
-                            case Block.Directions.West:
+                            case Directions.West:
+                            case Directions.SouthWest:
                                 face.Verts[0] = new Vector3(h + 1, minD, v); 
                                 face.Verts[1] = new Vector3(h, maxD, v);
                                 face.Verts[2] = new Vector3(h, d, v);
@@ -827,19 +927,19 @@ namespace GridWorld
 
                     case Block.Geometries.Solid:
                     case Block.Geometries.FullRamp:
-                        if (block.Geom == Block.Geometries.Solid || block.Dir == Block.Directions.East)
+                        if (block.Geom == Block.Geometries.Solid || block.Dir == Directions.East)
                         {
                             face.Verts[2] = new Vector3(h + 1, minD, v);
                             face.Verts[3] = new Vector3(h + 1, minD, v + 1);
                             face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
                             face.Verts[1] = new Vector3(h + 1, maxD, v);
                         }
-                        else if (block.Dir != Block.Directions.West)
+                        else if (block.Dir != Directions.West)
                         {
                             switch (block.Dir)
                             {
-                                case Block.Directions.North:
-                                case Block.Directions.NorthEast:
+                                case Directions.North:
+                                case Directions.NorthEast:
                                     face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
                                     face.Verts[1] = new Vector3(h + 1, minD, v);
                                     face.Verts[2] = new Vector3(h + 1, minD, v + 1);
@@ -847,8 +947,8 @@ namespace GridWorld
       
                                     break;
 
-                                case Block.Directions.South:
-                                case Block.Directions.SouthEast:
+                                case Directions.South:
+                                case Directions.SouthEast:
                                     face.Verts[0] = new Vector3(h + 1, minD, v + 1);
                                     face.Verts[1] = new Vector3(h + 1, maxD, v);
                                     face.Verts[2] = new Vector3(h + 1, minD, v);
@@ -866,7 +966,8 @@ namespace GridWorld
                     case Block.Geometries.LowerRamp:
                         switch (block.Dir)
                         {
-                            case Block.Directions.North:
+                            case Directions.North:
+                            case Directions.NorthEast:
                                 face.Verts[2] = new Vector3(h + 1, d, v);
                                 face.Verts[3] = new Vector3(h + 1, d, v + 1);
                                 face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
@@ -874,7 +975,8 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(maxD - d, minD - d);
                                 break;
 
-                            case Block.Directions.South:
+                            case Directions.South:
+                            case Directions.SouthEast:
                                 face.Verts[2] = new Vector3(h + 1, d, v);
                                 face.Verts[3] = new Vector3(h + 1, d, v + 1);
                                 face.Verts[0] = new Vector3(h + 1, minD, v + 1);
@@ -882,7 +984,7 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(minD - d, maxD - d);
                                 break;
 
-                            case Block.Directions.East:
+                            case Directions.East:
                                 face.Verts[2] = new Vector3(h + 1, d, v);
                                 face.Verts[3] = new Vector3(h + 1, d, v + 1);
                                 face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
@@ -890,7 +992,9 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(1);
                                 break;
 
-                            case Block.Directions.West:
+                            case Directions.West:
+                            case Directions.SouthWest:
+                            case Directions.NorthWest:
                                 face.Verts[2] = new Vector3(h + 1, d, v);
                                 face.Verts[3] = new Vector3(h + 1, d, v + 1);
                                 face.Verts[0] = new Vector3(h + 1, minD, v + 1);
@@ -925,7 +1029,7 @@ namespace GridWorld
 
                     case Block.Geometries.Solid:
                     case Block.Geometries.FullRamp:
-                        if (block.Geom == Block.Geometries.Solid || block.Dir == Block.Directions.West)
+                        if (block.Geom == Block.Geometries.Solid || block.Dir == Directions.West)
                         {
                             face.Verts[1] = new Vector3(h, minD, v);
                             face.Verts[2] = new Vector3(h, maxD, v);
@@ -933,12 +1037,12 @@ namespace GridWorld
                             face.Verts[0] = new Vector3(h, minD, v + 1);
                             Array.Reverse(face.UVs);
                         }
-                        else if (block.Dir != Block.Directions.East)
+                        else if (block.Dir != Directions.East)
                         {
                             switch (block.Dir)
                             {
-                                case Block.Directions.North:
-                                case Block.Directions.NorthWest:
+                                case Directions.North:
+                                case Directions.NorthWest:
                                     face.Verts[0] = new Vector3(h, minD, v);
                                     face.Verts[1] = new Vector3(h, maxD, v + 1);
                                     face.Verts[2] = new Vector3(h, minD, v + 1);
@@ -946,8 +1050,8 @@ namespace GridWorld
                                     face.Verts[3] = face.Verts[2];
                                     break;
 
-                                case Block.Directions.South:
-                                case Block.Directions.SouthWest:
+                                case Directions.South:
+                                case Directions.SouthWest:
                                     face.Verts[0] = new Vector3(h, maxD, v); 
                                     face.Verts[1] = new Vector3(h, minD, v + 1);
                                     face.Verts[2] = new Vector3(h, minD, v);
@@ -965,7 +1069,8 @@ namespace GridWorld
                     case Block.Geometries.LowerRamp:
                         switch (block.Dir)
                         {
-                            case Block.Directions.North:
+                            case Directions.North:
+                            case Directions.NorthWest:
                                 face.Verts[0] = new Vector3(h, minD, v);
                                 face.Verts[1] = new Vector3(h, maxD, v + 1);
                                 face.Verts[2] = new Vector3(h, d, v + 1);
@@ -974,7 +1079,8 @@ namespace GridWorld
                                
                                 break;
 
-                            case Block.Directions.South:
+                            case Directions.South:
+                            case Directions.SouthWest:
                                 face.Verts[0] = new Vector3(h, maxD, v);
                                 face.Verts[1] = new Vector3(h, minD, v + 1);
                                 face.Verts[2] = new Vector3(h, d, v + 1);
@@ -982,7 +1088,9 @@ namespace GridWorld
                                 face.UVs = GetConstUVOffsets(maxD - d, minD - d);
                                 break;
 
-                            case Block.Directions.East:
+                            case Directions.East:
+                            case Directions.NorthEast:
+                            case Directions.SouthEast:
                                 face.Verts[1] = new Vector3(h, d, v);
                                 face.Verts[2] = new Vector3(h, minD, v);
                                 face.Verts[3] = new Vector3(h, minD, v + 1);
@@ -991,14 +1099,13 @@ namespace GridWorld
                                 Array.Reverse(face.UVs);
                                 break;
 
-                            case Block.Directions.West:
+                            case Directions.West:
                                 face.Verts[1] = new Vector3(h, d, v);
                                 face.Verts[2] = new Vector3(h, maxD, v);
                                 face.Verts[3] = new Vector3(h, maxD, v + 1);
                                 face.Verts[0] = new Vector3(h, d, v + 1);
                                 face.UVs = GetConstUVOffsets(1);
                                 Array.Reverse(face.UVs);
-                                
                                 break;
                         }
                         break;
@@ -1115,16 +1222,16 @@ namespace GridWorld
                                 if (d != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, cluster.GetBlockRelative( h, v, d - 1)))
                                     geometry.GetMesh(World.BlockTextureToTextureID(bottomTexture)).Add(BuildBelowGeometry(World.BlockTextureToTextureOffset(bottomTexture), World.BlockTextureToTextureID(bottomTexture),  h, v, d, block));
 
-                                if (DirectionIsOpen(block, GetBlockNorthRelative(cluster, northCluster, h, v, d),Block.Directions.North))
+                                if (DirectionIsOpen(block, GetBlockNorthRelative(cluster, northCluster, h, v, d),Directions.North))
                                     geometry.GetMesh(World.BlockTextureToTextureID(sideTexture[0])).Add(BuildNorthGeometry(World.BlockTextureToTextureOffset(sideTexture[0]), World.BlockTextureToTextureID(sideTexture[0]), h, v, d, block));
 
-                                if (DirectionIsOpen(block, GetBlockSouthRelative(cluster, southCluster, h, v, d), Block.Directions.South))
+                                if (DirectionIsOpen(block, GetBlockSouthRelative(cluster, southCluster, h, v, d), Directions.South))
                                     geometry.GetMesh(World.BlockTextureToTextureID(sideTexture[1])).Add(BuildSouthGeometry(World.BlockTextureToTextureOffset(sideTexture[1]), World.BlockTextureToTextureID(sideTexture[1]), h, v, d, block));
 
-                                if (DirectionIsOpen(block, GetBlockEastRelative(cluster, eastCluster, h, v, d), Block.Directions.East))
+                                if (DirectionIsOpen(block, GetBlockEastRelative(cluster, eastCluster, h, v, d), Directions.East))
                                     geometry.GetMesh(World.BlockTextureToTextureID(sideTexture[2])).Add(BuildEastGeometry(World.BlockTextureToTextureOffset(sideTexture[2]), World.BlockTextureToTextureID(sideTexture[2]),  h, v, d, block));
 
-                                if (DirectionIsOpen(block, GetBlockWestRelative(cluster, westCluster, h, v, d), Block.Directions.West))
+                                if (DirectionIsOpen(block, GetBlockWestRelative(cluster, westCluster, h, v, d), Directions.West))
                                     geometry.GetMesh(World.BlockTextureToTextureID(sideTexture[3])).Add(BuildWestGeometry(World.BlockTextureToTextureOffset(sideTexture[3]), World.BlockTextureToTextureID(sideTexture[3]), h, v, d, block));
                             }
                     });

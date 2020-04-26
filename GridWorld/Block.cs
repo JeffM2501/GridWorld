@@ -6,6 +6,19 @@ using System.Threading.Tasks;
 
 namespace GridWorld
 {
+    public enum Directions
+    {
+        None = 0,
+        North,
+        South,
+        East,
+        West,
+        NorthWest,
+        NorthEast,
+        SouthWest,
+        SouthEast,
+    }
+
     public class Block : IEquatable<Block>
     {
         public enum Geometries
@@ -18,20 +31,6 @@ namespace GridWorld
         }
 
         public Geometries Geom = Geometries.Empty;
-
-        public enum Directions
-        {
-            None = 0,
-            North,
-            South,
-            East,
-            West,
-            NorthWest,
-            NorthEast,
-            SouthWest,
-            SouthEast,
-        }
-
         public Directions Dir = Directions.None;
 
         public const byte FullHeight = 8;
@@ -73,7 +72,7 @@ namespace GridWorld
 
         public float GetDForLocalPosition(float h, float v)
         {
-            if (Geom == Geometries.Empty)
+            if (Geom == Geometries.Empty || !Coolidable)
                 return float.MinValue;
 
             float invH = 1 - h;
