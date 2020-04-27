@@ -22,7 +22,7 @@ namespace GridWorld.Test.Components
         private Node TimmerMarker = null;
         private Node TimerOrigin = null;
 
-        private bool ShowTimers = true;
+        private bool ShowTimers = false;
 
         public ClusterInfo (Cluster cluster)
         {

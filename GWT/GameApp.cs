@@ -124,11 +124,11 @@ namespace GridWorld.Test
             if (GenerateTerrain)
             {
                 PerlinBuilder.BuildPerlin(string.Empty, null);
-                GeoLoadManager.NeedCluster += PerlinBuilder.EnqueCluster;
             }
             else
                 PerlinBuilder.Build(string.Empty, null);
 
+            GeoLoadManager.NeedCluster += PerlinBuilder.EnqueCluster;
             SetupCamera();
 
             PlayerNode = RootScene.CreateChild("local_player");

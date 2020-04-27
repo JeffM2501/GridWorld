@@ -358,8 +358,8 @@ namespace GridWorld
             {
                 InitStandardBlocks();
 
-                int HCount = 3;
-                int VCount = 3;
+                int HCount = 5;
+                int VCount = 5;
 
                 int hMin = 0;
                 if (HCount > 1)
@@ -409,9 +409,16 @@ namespace GridWorld
             protected Perlin MidPerlin = new Perlin() { Seed = new Random().Next(), Frequency = 0.025, OctaveCount = 1 };
             protected Perlin HighPerlin = new Perlin() { Seed = new Random().Next(), Frequency = 0.025, OctaveCount = 1 };
 
+            public static bool UsePerlin = false;
 
             protected void DynamicTerrainCluster(Cluster cluster)
             {
+                if (!UsePerlin)
+                {
+                    AddCrapToCluster(cluster);
+                    return;
+                }
+
                 for (Int64 v = 0; v < Cluster.HVSize; v++)
                 {
                     for (Int64 h = 0; h < Cluster.HVSize; h++)
