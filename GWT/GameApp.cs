@@ -229,6 +229,8 @@ namespace GridWorld.Test
             if (Exiting)
                 return;
 
+            GeoLoadManager.CheckOrigin(PlayerNode.WorldPosition);
+
             var newNodes = PerlinBuilder.PopNewClusters();
             if (newNodes != null)
             {
@@ -243,13 +245,15 @@ namespace GridWorld.Test
             GeoLoadManager.UpdateGeoForPosition(CameraNode.WorldPosition);
 
             PostionGUI.Value = CameraNode.WorldPosition.ToString(6);
-            var cluster = World.ClusterFromPosition(CameraNode.WorldPosition);
-            if (cluster != null)
-            {
-                PostionGUI.Value += " CO H" + cluster.Origin.H.ToString() + " V" + cluster.Origin.V.ToString();
+//             var cluster = World.ClusterFromPosition(CameraNode.WorldPosition);
+//             if (cluster != null)
+//             {
+//                 PostionGUI.Value += " CO H" + cluster.Origin.H.ToString() + " V" + cluster.Origin.V.ToString();
+// 
+//                 PostionGUI.Value += " BO H" + ((int)(CameraNode.WorldPosition.X - cluster.Origin.H)).ToString() + " V" + ((int)(CameraNode.WorldPosition.Z - cluster.Origin.V)).ToString();
+//             }
 
-                PostionGUI.Value += " BO H" + ((int)(CameraNode.WorldPosition.X - cluster.Origin.H)).ToString() + " V" + ((int)(CameraNode.WorldPosition.Z - cluster.Origin.V)).ToString();
-            }
+            PostionGUI.Value += "Origin H" + GeoLoadManager.CurrentOrigin.H.ToString() + " V" + GeoLoadManager.CurrentOrigin.V.ToString();
 
             base.OnUpdate(timeStep);
         }

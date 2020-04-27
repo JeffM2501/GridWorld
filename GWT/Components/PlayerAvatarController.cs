@@ -6,9 +6,11 @@ using System.Threading.Tasks;
 
 using Urho;
 
+using GridWorld.Test.Geometry;
+
 namespace GridWorld.Test.Components
 {
-    public class PlayerAvatarController : LogicComponent
+    public class PlayerAvatarController : WorldSpaceObject
     {
         public Camera CameraNode = null;
 
@@ -18,7 +20,7 @@ namespace GridWorld.Test.Components
 
         public event EventHandler FlightStatusChanged = null;
 
-        public PlayerAvatarController()
+        public PlayerAvatarController() : base()
         {
             ReceiveSceneUpdates = true;
         }
@@ -66,7 +68,7 @@ namespace GridWorld.Test.Components
 
             float moveSpeed = 5;
             if (Application.Input.GetKeyDown(Key.Shift))
-                moveSpeed *= 5;
+                moveSpeed *= 15;
 
             if (Application.Input.GetKeyPress(Key.F1))
             {
@@ -142,11 +144,12 @@ namespace GridWorld.Test.Components
                             actualD = d;
                     }
 
-
                     Node.Position = new Vector3(Node.Position.X, actualD, Node.Position.Z);
                 }
                     
             }
+
+            UpdateWorldPos();
         }
     }
 }
