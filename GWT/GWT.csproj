@@ -56,6 +56,7 @@
   <ItemGroup>
     <Compile Include="Components\ClusterInfo.cs" />
     <Compile Include="Components\DepthTester.cs" />
+    <Compile Include="Components\OriginCompensator.cs" />
     <Compile Include="Components\PlayerAvatarController.cs" />
     <Compile Include="Components\Sun.cs" />
     <Compile Include="GameApp.cs" />

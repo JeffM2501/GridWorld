@@ -227,6 +227,14 @@ namespace GridWorld
                 FillAreaWithBlock(newCluster, 25, 20, 28, 30, dLevel, dLevel + 5, SolidStone);
 
 
+                newCluster.SetBlockRelative(15, 22, dLevel-1, MakeBlock(Grass, Block.Geometries.Solid, Directions.North, Block.ZeroHeight, Block.ThreeQuarterHeight));
+                newCluster.SetBlockRelative(15, 23, dLevel - 1, MakeBlock(Grass, Block.Geometries.LowerRamp, Directions.North, Block.ThreeQuarterHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(15, 21, dLevel - 1, MakeBlock(Grass, Block.Geometries.LowerRamp, Directions.South, Block.ThreeQuarterHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(14, 22, dLevel - 1, MakeBlock(Grass, Block.Geometries.LowerRamp, Directions.West, Block.ThreeQuarterHeight, Block.FullHeight));
+                newCluster.SetBlockRelative(16, 22, dLevel - 1, MakeBlock(Grass, Block.Geometries.LowerRamp, Directions.East, Block.ThreeQuarterHeight, Block.FullHeight));
+
+              //  newCluster.SetBlockRelative(16, 23, dLevel - 1, MakeBlock(Grass, Block.Geometries.LowerRamp, Directions.NorthEast, Block.ThreeQuarterHeight, Block.FullHeight));
+
                 FillAreaWithBlock(newCluster, 8, 0, 16, 2, dLevel, dLevel + 5, SolidStone);
 
                 int xCenter = 1;

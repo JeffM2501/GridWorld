@@ -12,6 +12,39 @@ namespace GridWorld.Test.Geometry
     {
         public delegate void GeoLoadCallback(Cluster theCluster, object tag);
 
+        public static ClusterPos CurrentOrigin = new ClusterPos(0, 0);
+
+        public delegate void OriginChangeCallback(ClusterPos oldOrigin, ClusterPos newOrigin);
+
+        public static event OriginChangeCallback OriginChanged = null;
+
+        public static void SetOrigin(Int64 h, Int64 v)
+        {
+            ClusterPos oldOriign = CurrentOrigin;
+            CurrentOrigin = new ClusterPos(h,v);
+            OriginChanged?.Invoke(oldOriign, CurrentOrigin);
+        }
+
+        public static Int64 OriginLimit = 1024;
+        public static Int64 OriginSnap = 512;
+
+        public static void CheckOrigin(Vector3 cameraPos)
+        {
+            if (cameraPos.X > OriginLimit || cameraPos.X < -OriginLimit || cameraPos.Z > OriginLimit || cameraPos.Z < -OriginLimit)
+            {
+                Int64 h = CurrentOrigin.H + (Int64)cameraPos.X;
+                Int64 v = CurrentOrigin.V + (Int64)cameraPos.Z;
+
+                h = h / OriginSnap;
+                v = v / OriginSnap;
+
+                h = h * OriginSnap;
+                v = v * OriginSnap;
+
+                SetOrigin(h, v);
+            }
+        }
+
         public static int ForceLoadRadius = 4;
 
         private static bool UseThreads = false;
@@ -93,7 +126,11 @@ namespace GridWorld.Test.Geometry
 
         public static void UpdateGeoForPosition(Vector3 cameraPos)
         {
-            var rootCluster = World.ClusterFromPosition(cameraPos);
+            Int64 h = (Int64)cameraPos.X + CurrentOrigin.H;
+            Int64 v = (Int64)cameraPos.Z + CurrentOrigin.V;
+            Int64 d = (Int64)cameraPos.Y + 0;
+
+            var rootCluster = World.ClusterFromPosition(h,v,d);
             if (rootCluster == null)
                 return;
 

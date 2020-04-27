@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 
 using Urho;
 
+using GridWorld.Test.Geometry;
+
 namespace GridWorld.Test.Components
 {
     public class PlayerAvatarController : LogicComponent
@@ -21,6 +23,18 @@ namespace GridWorld.Test.Components
         public PlayerAvatarController()
         {
             ReceiveSceneUpdates = true;
+            GeoLoadManager.OriginChanged += GeoLoadManager_OriginChanged;
+        }
+
+        private void GeoLoadManager_OriginChanged(ClusterPos oldOrigin, ClusterPos newOrigin)
+        {
+            float dh = newOrigin.H - oldOrigin.H;
+            float dv = newOrigin.V - oldOrigin.V;
+
+            float newPX = Node.Position.X - dh;
+            float newPZ = Node.Position.Z - dv;
+
+            Node.SetWorldPosition(new Vector3(newPX, Node.Position.Y, newPZ));
         }
 
         public override void OnAttachedToNode(Node node)
@@ -66,7 +80,7 @@ namespace GridWorld.Test.Components
 
             float moveSpeed = 5;
             if (Application.Input.GetKeyDown(Key.Shift))
-                moveSpeed *= 5;
+                moveSpeed *= 15;
 
             if (Application.Input.GetKeyPress(Key.F1))
             {
@@ -141,7 +155,6 @@ namespace GridWorld.Test.Components
                         if (actualD > d)
                             actualD = d;
                     }
-
 
                     Node.Position = new Vector3(Node.Position.X, actualD, Node.Position.Z);
                 }
