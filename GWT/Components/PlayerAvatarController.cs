@@ -64,7 +64,7 @@ namespace GridWorld.Test.Components
 
             Vector3 oldPos = Node.Position;
 
-            float moveSpeed = 20;
+            float moveSpeed = 5;
             if (Application.Input.GetKeyDown(Key.Shift))
                 moveSpeed *= 5;
 

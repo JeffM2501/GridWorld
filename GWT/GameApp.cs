@@ -108,6 +108,8 @@ namespace GridWorld.Test
 
         protected WorldBuilder.FlatBuilder PerlinBuilder = null;
 
+        bool GenerateTerrain = false;
+
         public void SetupScene()
         {
             this.Renderer.TextureFilterMode = TextureFilterMode.Nearest;
@@ -119,9 +121,14 @@ namespace GridWorld.Test
             RootScene.CreateComponent<DebugRenderer>();
 
             PerlinBuilder = new WorldBuilder.FlatBuilder();
-            PerlinBuilder.BuildPerlin(string.Empty, null);
+            if (GenerateTerrain)
+            {
+                PerlinBuilder.BuildPerlin(string.Empty, null);
+                GeoLoadManager.NeedCluster += PerlinBuilder.EnqueCluster;
+            }
+            else
+                PerlinBuilder.Build(string.Empty, null);
 
-            GeoLoadManager.NeedCluster += PerlinBuilder.EnqueCluster;
             SetupCamera();
 
             PlayerNode = RootScene.CreateChild("local_player");

@@ -6,41 +6,60 @@ using System.Threading.Tasks;
 
 namespace GridWorld
 {
+    public enum Directions
+    {
+        None = 0,
+        North,
+        South,
+        East,
+        West,
+        NorthWest,
+        NorthEast,
+        SouthWest,
+        SouthEast,
+    }
+
     public class Block : IEquatable<Block>
     {
-        public enum Geometry
+        public enum Geometries
         {
             Empty,
+            Invisible,
             Solid,
-            Fluid,
-            NorthFullRamp,
-            SouthFullRamp,
-            EastFullRamp,
-            WestFullRamp,
-            HalfUpper,
-            HalfLower,
-            NorthHalfLowerRamp,
-            SouthHalfLowerRamp,
-            EastHalfLowerRamp,
-            WestHalfLowerRamp,
-            NorthHalfUpperRamp,
-            SouthHalfUpperRamp,
-            EastHalfUpperRamp,
-            WestHalfUpperRamp,
+            FullRamp,
+            LowerRamp,
         }
+
+        public Geometries Geom = Geometries.Empty;
+        public Directions Dir = Directions.None;
+
+        public const byte FullHeight = 8;
+        public const byte OpenFluidHeight = 7;
+        public const byte ThreeQuarterHeight = 6;
+        public const byte HalfHeight = 4;
+        public const byte QuarterHeight = 2;
+        public const byte ZeroHeight = 0;
+        public const byte BlockHeightIncrement = 1;
+
+        public byte MinHeight = ZeroHeight;
+        public byte MaxHeight = FullHeight;
+
+        public float GetMaxD() { return MaxHeight / 8.0f; }
+        public float GetMinD() { return MinHeight / 8.0f; }
+
+        public bool Trasperant = false;
+        public bool Coolidable = true;
 
         public int DefID;
 
-        public Geometry Geom;
-
         public object RenderTag = null;
 
-        public static Block Empty = new Block(World.BlockDef.EmptyID, Geometry.Empty);
-        public static Block Invalid = new Block(World.BlockDef.EmptyID, Geometry.Empty);
+        public static Block Empty = new Block(World.BlockDef.EmptyID, Geometries.Empty);
+        public static Block Invalid = new Block(World.BlockDef.EmptyID, Geometries.Empty);
 
         public Block() { }
 
-        public Block(int id, Geometry geo)
+        public Block(int id, Geometries geo)
         {
             DefID = id;
             Geom = geo;
@@ -48,61 +67,69 @@ namespace GridWorld
 
         public override int GetHashCode()
         {
-            return DefID.GetHashCode() ^ Geom.GetHashCode();
+            return DefID.GetHashCode() ^ Geom.GetHashCode() ^ Dir.GetHashCode() ^ MaxHeight.GetHashCode() ^ MinHeight.GetHashCode();
         }
 
         public float GetDForLocalPosition(float h, float v)
         {
-            if (Geom == Geometry.Empty)
+            if (Geom == Geometries.Empty || !Coolidable)
                 return float.MinValue;
 
             float invH = 1 - h;
             float invV = 1 - v;
 
+            float max = MaxHeight / 8.0f;
+            float min = MinHeight / 8.0f;
+            float delta = max - min;
+
             switch (Geom)
             {
-                case Block.Geometry.Solid:
-                case Block.Geometry.HalfUpper:
-                    return 1;
+                case Block.Geometries.Solid:
+                case Block.Geometries.Invisible:
+                    return max;
 
-                case Block.Geometry.HalfLower:
-                    return 0.5f;
+                case Block.Geometries.FullRamp:
+                case Block.Geometries.LowerRamp:
+                    switch (Dir)
+                    {
+                        case Directions.North:
+                            return (v * delta) + min;
 
-                case Block.Geometry.NorthFullRamp:
-                    return v;
+                        case Directions.South:
+                            return (invV * delta) + min;
 
-                case Block.Geometry.SouthFullRamp:
-                    return 1.0f - v;
+                        case Directions.East:
+                            return (h * delta) + min;
 
-                case Block.Geometry.EastFullRamp:
-                    return h;
+                        case Directions.West:
+                            return (invH * delta) + min;
 
-                case Block.Geometry.WestFullRamp:
-                    return 1.0f - h;
+                        case Directions.NorthWest:
+                            if (v <= invH)
+                                return (v * delta) + min;
+                            else
+                                return (invH * delta) + min;
 
-                case Block.Geometry.NorthHalfLowerRamp:
-                    return v * 0.5f;
+                        case Directions.NorthEast:
+                            if (v <= invH)
+                                return (h * delta) + min;
+                            else
+                                return (v * delta) + min;
 
-                case Block.Geometry.SouthHalfLowerRamp:
-                    return (1.0f - v) * 0.5f;
+                        case Directions.SouthEast:
+                            if (v <= invH)
+                                return (invV * delta) + min;
+                            else
+                                return (h * delta) + min;
 
-                case Block.Geometry.EastHalfLowerRamp:
-                    return h * 0.5f;
+                        case Directions.SouthWest:
+                            if (v <= invH)
+                                return (invH * delta) + min;
+                            else
+                                return (invV * delta) + min;
+                    }
 
-                case Block.Geometry.WestHalfLowerRamp:
-                    return (1.0f - h) * 0.5f;
-
-                case Block.Geometry.NorthHalfUpperRamp:
-                    return (v * 0.5f) + 0.5f;
-
-                case Block.Geometry.SouthHalfUpperRamp:
-                    return ((1.0f - v) * 0.5f) + 0.5f;
-
-                case Block.Geometry.EastHalfUpperRamp:
-                    return (h * 0.5f) + 0.5f;
-
-                case Block.Geometry.WestHalfUpperRamp:
-                    return ((1.0f - h) * 0.5f) + 0.5f;
+                    break;
             }
 
             return float.MinValue;
@@ -110,7 +137,7 @@ namespace GridWorld
 
         public bool Equals(Block other)
         {
-            return other != null && other.DefID == DefID && other.Geom == Geom;
+            return other != null && other.DefID == DefID && other.Geom == Geom && other.Dir == Dir && other.MinHeight == MinHeight && other.MaxHeight == MaxHeight;
         }
     }
 }

@@ -4,7 +4,7 @@
 *Runtime Geometry loading
 *64 bit cluster indexes
 *Procedural Generation
-Material and block shape flags(dir, shape, height, density)
+*Material and block shape flags(dir, shape, height, density)
 Moving origin
 3D Cluster indexes
 Editing

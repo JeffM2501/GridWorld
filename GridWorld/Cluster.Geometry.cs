@@ -40,6 +40,12 @@ namespace GridWorld
             public MeshGroup() { }
             public MeshGroup(int ID) { TextureID = ID; }
 
+            public void Add(Face[] faces)
+            {
+                foreach (var face in faces)
+                    Add(face);
+            }
+
             public void Add(Face face)
             {
                 if (face.Verts == null)
@@ -202,302 +208,496 @@ namespace GridWorld
                 if (otherGeo == Block.Invalid)
                     return false;
 
-                if (thisGeo.Geom == Block.Geometry.Fluid && otherGeo.Geom == Block.Geometry.Fluid)
+                if (thisGeo.Trasperant && otherGeo.Trasperant)
                     return false;
 
-                return otherGeo.Geom == Block.Geometry.Fluid || otherGeo.Geom == Block.Geometry.Empty || otherGeo.Geom == Block.Geometry.HalfUpper;
-            }
+                if (otherGeo.Geom == Block.Geometries.LowerRamp && thisGeo.Geom == Block.Geometries.Solid)
+                {
+                    if (thisGeo.MaxHeight < Block.FullHeight)
+                        return true;
 
-            private static bool IsLowerRamp(Block thisGeo)
-            {
-                return thisGeo.Geom == Block.Geometry.NorthHalfLowerRamp || thisGeo.Geom == Block.Geometry.SouthHalfLowerRamp || thisGeo.Geom == Block.Geometry.EastHalfLowerRamp || thisGeo.Geom == Block.Geometry.WestHalfLowerRamp;
-            }
+                    return false;
+                }
 
-            private static bool IsUpperRamp(Block thisGeo)
-            {
-                return thisGeo.Geom == Block.Geometry.NorthHalfUpperRamp || thisGeo.Geom == Block.Geometry.SouthHalfUpperRamp || thisGeo.Geom == Block.Geometry.EastHalfUpperRamp || thisGeo.Geom == Block.Geometry.WestHalfUpperRamp;
+                if (thisGeo.MaxHeight < Block.FullHeight ||  otherGeo.MinHeight > Block.ZeroHeight)
+                    return true;
+
+                return otherGeo.Trasperant || otherGeo.Geom == Block.Geometries.Empty || otherGeo.Geom == Block.Geometries.Invisible || (otherGeo.Geom == Block.Geometries.Solid && otherGeo.MinHeight > 0);
             }
 
             private static bool BellowIsOpen(Block thisGeo, Block otherGeo)
             {
-                if (otherGeo == Block.Invalid)
+                if (thisGeo.Geom != Block.Geometries.LowerRamp && thisGeo.GetMinD() > 0)
+                    return true;
+
+                if (otherGeo == Block.Invalid || otherGeo.Geom == Block.Geometries.Solid)
                     return false;
 
-
-                if (thisGeo.Geom == Block.Geometry.Fluid && otherGeo.Geom == Block.Geometry.Fluid)
+                if (thisGeo.Trasperant && otherGeo.Trasperant)
                     return false;
-                return otherGeo.Geom != Block.Geometry.Solid && otherGeo.Geom != Block.Geometry.HalfUpper && !IsLowerRamp(otherGeo) && !IsUpperRamp(otherGeo);
+
+                if (otherGeo.MaxHeight < Block.FullHeight)
+                    return true;
+
+                if (otherGeo.Geom == Block.Geometries.Empty || otherGeo.Geom == Block.Geometries.Invisible)
+                    return true;
+
+                return otherGeo.MaxHeight < 1;
             }
 
-            private static bool NorthIsOpen(Block thisGeo, Block otherGeo)
+            private static Directions GetOppositeDir(Directions dir)
             {
-                if (otherGeo == Block.Invalid)
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.Fluid && otherGeo.Geom == Block.Geometry.Fluid)
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.NorthHalfLowerRamp && (otherGeo.Geom == Block.Geometry.SouthHalfLowerRamp || otherGeo.Geom == Block.Geometry.SouthHalfUpperRamp))
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.NorthHalfUpperRamp && otherGeo.Geom == Block.Geometry.SouthHalfUpperRamp)
-                    return false;
-
-                return otherGeo.Geom != Block.Geometry.Solid && otherGeo.Geom != Block.Geometry.SouthFullRamp && otherGeo.Geom != Block.Geometry.SouthHalfLowerRamp && otherGeo.Geom != Block.Geometry.SouthHalfUpperRamp;
-            }
-
-            private static bool SouthIsOpen(Block thisGeo, Block otherGeo)
-            {
-                if (otherGeo == Block.Invalid)
-                    return false;
-
-
-                if (thisGeo.Geom == Block.Geometry.Fluid && otherGeo.Geom == Block.Geometry.Fluid)
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.SouthHalfLowerRamp && (otherGeo.Geom == Block.Geometry.NorthHalfLowerRamp || otherGeo.Geom == Block.Geometry.NorthHalfUpperRamp))
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.SouthHalfUpperRamp && otherGeo.Geom == Block.Geometry.NorthHalfUpperRamp)
-                    return false;
-
-                return otherGeo.Geom != Block.Geometry.Solid && otherGeo.Geom != Block.Geometry.NorthFullRamp && otherGeo.Geom != Block.Geometry.NorthHalfLowerRamp && otherGeo.Geom != Block.Geometry.NorthHalfUpperRamp;
-            }
-
-            private static bool EastIsOpen(Block thisGeo, Block otherGeo)
-            {
-                if (otherGeo == Block.Invalid)
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.Fluid && otherGeo.Geom == Block.Geometry.Fluid)
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.EastHalfLowerRamp && (otherGeo.Geom == Block.Geometry.WestHalfLowerRamp || otherGeo.Geom == Block.Geometry.WestHalfUpperRamp))
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.EastHalfUpperRamp && otherGeo.Geom == Block.Geometry.WestHalfUpperRamp)
-                    return false;
-
-                return otherGeo.Geom != Block.Geometry.Solid && otherGeo.Geom != Block.Geometry.WestFullRamp && otherGeo.Geom != Block.Geometry.WestHalfLowerRamp && otherGeo.Geom != Block.Geometry.WestHalfUpperRamp;
-            }
-
-            private static bool WestIsOpen(Block thisGeo, Block otherGeo)
-            {
-                if (otherGeo == Block.Invalid)
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.Fluid && otherGeo.Geom == Block.Geometry.Fluid)
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.WestHalfLowerRamp && (otherGeo.Geom == Block.Geometry.EastHalfLowerRamp || otherGeo.Geom == Block.Geometry.EastHalfUpperRamp))
-                    return false;
-
-                if (thisGeo.Geom == Block.Geometry.WestHalfUpperRamp && otherGeo.Geom == Block.Geometry.EastHalfUpperRamp)
-                    return false;
-
-                return otherGeo.Geom != Block.Geometry.Solid && otherGeo.Geom != Block.Geometry.EastFullRamp && otherGeo.Geom != Block.Geometry.EastHalfLowerRamp && otherGeo.Geom != Block.Geometry.EastHalfUpperRamp;
-            }
-
-            public static Vector2[] GetUVsForOffset(int imageOffset, int texture)
-            {
-                World.TextureInfo info = World.Info.Textures[texture];
-
-                int imageY = imageOffset / info.HCount;
-                int imageX = imageOffset - imageY * info.HCount;
-
-                double imageGirdX = 1.0 / info.HCount;
-                double imageGirdY = 1.0 / info.VCount;
-
-                Vector2[] ret = new Vector2[4] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1), new Vector2(0, 1) };
-                //           return ret;
-                ret[0] = new Vector2((float)(imageX * imageGirdX), (float)(imageY * imageGirdY));
-                ret[1] = new Vector2((float)(imageX * imageGirdX) + (float)(imageGirdX), (float)(imageY * imageGirdY));
-                ret[2] = new Vector2((float)(imageX * imageGirdX) + (float)(imageGirdX), (float)(imageY * imageGirdY) + (float)(imageGirdY));
-                ret[3] = new Vector2((float)(imageX * imageGirdX), (float)(imageY * imageGirdY) + (float)(imageGirdY));
-
-                return ret;
-            }
-
-            public static Face BuildAboveGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
-            {
-                Face face = new Face();
-
-                face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
-                face.UVs = GetUVsForOffset(imageOffset, texture);
-
-                switch (block.Geom)
+                switch(dir)
                 {
-                    case Block.Geometry.Empty:
-                        return Face.Empty;
+                    default:
+                        return Directions.None;
 
-                    case Block.Geometry.Solid:
-                    case Block.Geometry.HalfUpper:
-                        face.Normal = Vector3.UnitY;
-                        face.Verts[0] = new Vector3(h, d + 1, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 1, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 1, v + 1);
+                    case Directions.North:
+                        return Directions.South;
+
+                    case Directions.South:
+                        return Directions.North;
+
+                    case Directions.East:
+                        return Directions.West;
+
+                    case Directions.West:
+                        return Directions.East;
+                }
+            }
+
+            private static bool DirectionIsOpen(Block thisGeo, Block otherGeo, Directions dir)
+            {
+                if (otherGeo == Block.Invalid)
+                    return false;
+
+                if (thisGeo.Trasperant && otherGeo.Trasperant)
+                    return false;
+
+                if (otherGeo.Geom == Block.Geometries.Empty || otherGeo.Geom == Block.Geometries.Invisible)
+                    return true;
+
+//                 if (otherGeo.MinHeight > thisGeo.MinHeight || otherGeo.MaxHeight < thisGeo.MaxHeight)
+//                     return true; // there is some kind of gap, no mater the shape, so draw our side
+
+                if (otherGeo.Geom == Block.Geometries.Solid && otherGeo.MaxHeight >= thisGeo.MaxHeight) // it is more solid than us
+                     return false;
+
+                // cascading lower ramps
+                if (thisGeo.Geom == Block.Geometries.LowerRamp && otherGeo.Geom == Block.Geometries.LowerRamp)
+                {
+                    switch(dir)
+                    {
+                        case Directions.North:
+                            if (thisGeo.Dir == Directions.North)
+                            {
+                                if (otherGeo.Dir == Directions.North)
+                                    return otherGeo.MinHeight != thisGeo.MaxHeight;
+                                if (otherGeo.Dir == Directions.South)
+                                    return otherGeo.MaxHeight != thisGeo.MaxHeight;
+                            }
+                            if (thisGeo.Dir == Directions.South)
+                            {
+                                if (otherGeo.Dir == Directions.South)
+                                    return otherGeo.MaxHeight != thisGeo.MinHeight;
+                                if (otherGeo.Dir == Directions.North)
+                                    return otherGeo.MinHeight != thisGeo.MinHeight;
+                            }
+                            break;
+
+                        case Directions.South:
+                            if (thisGeo.Dir == Directions.South)
+                            {
+                                if (otherGeo.Dir == Directions.South)
+                                    return otherGeo.MinHeight != thisGeo.MaxHeight;
+                                if (otherGeo.Dir == Directions.North)
+                                    return otherGeo.MaxHeight != thisGeo.MaxHeight;
+                            }
+                            if (thisGeo.Dir == Directions.North)
+                            {
+                                if (otherGeo.Dir == Directions.North)
+                                    return otherGeo.MaxHeight != thisGeo.MinHeight;
+                                if (otherGeo.Dir == Directions.South)
+                                    return otherGeo.MinHeight != thisGeo.MinHeight;
+                            }
+                            break;
+
+                        case Directions.East:
+                            if (thisGeo.Dir == Directions.East)
+                            {
+                                if (otherGeo.Dir == Directions.East)
+                                    return otherGeo.MinHeight != thisGeo.MaxHeight;
+                                if (otherGeo.Dir == Directions.West)
+                                    return otherGeo.MaxHeight != thisGeo.MaxHeight;
+                            }
+                            if (thisGeo.Dir == Directions.West)
+                            {
+                                if (otherGeo.Dir == Directions.West)
+                                    return otherGeo.MaxHeight != thisGeo.MinHeight;
+                                if (otherGeo.Dir == Directions.East)
+                                    return otherGeo.MinHeight != thisGeo.MinHeight;
+                            }
+                            break;
+
+                        case Directions.West:
+                            if (thisGeo.Dir == Directions.West)
+                            {
+                                if (otherGeo.Dir == Directions.West)
+                                    return otherGeo.MinHeight != thisGeo.MaxHeight;
+                                if (otherGeo.Dir == Directions.East)
+                                    return otherGeo.MaxHeight != thisGeo.MaxHeight;
+                            }
+                            if (thisGeo.Dir == Directions.East)
+                            {
+                                if (otherGeo.Dir == Directions.East)
+                                    return otherGeo.MaxHeight != thisGeo.MinHeight;
+                                if (otherGeo.Dir == Directions.West)
+                                    return otherGeo.MinHeight != thisGeo.MinHeight;
+                            }
+                            break;
+                    }
+                   
+                }
+
+                // cascading lower to full ramp
+                if (thisGeo.Geom == Block.Geometries.LowerRamp && otherGeo.Geom == Block.Geometries.FullRamp && otherGeo.MinHeight == Block.ZeroHeight)
+                {
+                    var opposite = GetOppositeDir(dir);
+                    if (thisGeo.Dir == opposite && thisGeo.Dir == otherGeo.Dir && otherGeo.MaxHeight == thisGeo.MinHeight)
+                        return false;
+                }
+
+                if (thisGeo.Geom == Block.Geometries.FullRamp && otherGeo.Geom == Block.Geometries.LowerRamp && thisGeo.MinHeight == Block.ZeroHeight)
+                {
+                    if (thisGeo.Dir == dir && thisGeo.Dir == otherGeo.Dir && thisGeo.MaxHeight == otherGeo.MinHeight)
+                        return false;
+                }
+
+                // identical ramps
+                if (thisGeo.MaxHeight == otherGeo.MaxHeight && thisGeo.MinHeight == otherGeo.MinHeight)
+                {
+                    if (thisGeo.Geom == Block.Geometries.Solid && otherGeo.Geom == Block.Geometries.Solid)
+                        return false; // the full wall is shared between solid blocks.
+
+                    // is ramps are solid only in one direction
+                    if (thisGeo.Geom == Block.Geometries.Solid && otherGeo.Geom == Block.Geometries.FullRamp)
+                        return otherGeo.Dir != GetOppositeDir(dir);   
+
+                    if ((thisGeo.Geom == Block.Geometries.FullRamp && otherGeo.Geom == Block.Geometries.FullRamp) || (thisGeo.Geom == Block.Geometries.LowerRamp && otherGeo.Geom == Block.Geometries.LowerRamp))
+                    {
+                        switch (dir)
+                        {
+                            case Directions.North:
+                                switch (thisGeo.Dir)
+                                {
+                                    case Directions.North:
+                                        return otherGeo.Dir != Directions.South;
+
+                                    case Directions.NorthEast:
+                                    case Directions.East:
+                                        return otherGeo.Dir != Directions.East && otherGeo.Dir != Directions.SouthEast;
+
+                                    case Directions.NorthWest:
+                                    case Directions.West:
+                                        return otherGeo.Dir != Directions.West && otherGeo.Dir != Directions.SouthWest;
+                                }
+                                break;
+
+                            case Directions.South:
+                                switch (thisGeo.Dir)
+                                {
+                                    case Directions.South:
+                                        return otherGeo.Dir != Directions.North;
+
+                                    case Directions.SouthEast:
+                                    case Directions.East:
+                                        return otherGeo.Dir != Directions.East && otherGeo.Dir != Directions.NorthEast;
+
+                                    case Directions.SouthWest:
+                                    case Directions.West:
+                                        return otherGeo.Dir != Directions.West && otherGeo.Dir != Directions.NorthWest;
+                                }
+                                break;
+
+                            case Directions.East:
+                                switch (thisGeo.Dir)
+                                {
+                                    case Directions.East:
+                                        return otherGeo.Dir != Directions.West;
+
+                                    case Directions.NorthEast:
+                                    case Directions.North:
+                                        return otherGeo.Dir != Directions.North && otherGeo.Dir != Directions.NorthWest;
+
+                                    case Directions.SouthEast:
+                                    case Directions.South:
+                                        return otherGeo.Dir != Directions.South && otherGeo.Dir != Directions.SouthWest;
+                                }
+                                break;
+
+                            case Directions.West:
+                                switch (thisGeo.Dir)
+                                {
+                                    case Directions.West:
+                                        return otherGeo.Dir != Directions.East;
+
+                                    case Directions.SouthWest:
+                                    case Directions.South:
+                                        return otherGeo.Dir != Directions.South && otherGeo.Dir != Directions.SouthEast;
+
+                                    case Directions.NorthWest:
+                                    case Directions.North:
+                                        return otherGeo.Dir != Directions.North && otherGeo.Dir != Directions.NorthEast;
+                                }
+                                break;
+
+                            default:
+                                return true;
+                        }
+
+                        return true;
+                    }
+                }
+
+                return true; // always default to true, because then we make the geo and there is no gap
+            }
+
+            private static float SlopeVOffset(float delta)
+            {
+                return (1.0f - delta) * 0.5f;
+            }
+
+            public static Vector2[] GetConstUVOffsets( float delta )
+            {
+                return new Vector2[4] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1 - SlopeVOffset(delta)), new Vector2(0, 1 - SlopeVOffset(delta)) };
+            }
+
+            public static Vector2[] GetConstUVOffsets(float nearDelta, float farDelta)
+            {
+                return new Vector2[4] { new Vector2(0, 0), new Vector2(1, 0), new Vector2(1, 1 - SlopeVOffset(farDelta)), new Vector2(0, 1 - SlopeVOffset(nearDelta)) };
+            }
+
+            public static void SetTopVectorForDir(ref Vector3 norm, Directions dir, float delta)
+            {
+                norm = Vector3.UnitY;
+                switch (dir)
+                {
+                    default:
+                        return;
+
+                    case Directions.North:
+                        norm = Vector3.Cross(Vector3.UnitX * -1, new Vector3(0, delta, 1));
                         break;
 
-                    case Block.Geometry.HalfLower:
-                        face.Normal = Vector3.UnitY;
-                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
+                    case Directions.South:
+                        norm = Vector3.Cross(Vector3.UnitX, new Vector3(0, delta, -1));
                         break;
 
-                    case Block.Geometry.Fluid:
-                        face.Normal = Vector3.UnitY;
-                        face.Verts[0] = new Vector3(h, d + 0.95f, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.95f, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.95f, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 0.95f, v + 1);
+                    case Directions.East:
+                        norm = Vector3.Cross(Vector3.UnitZ, new Vector3(1, delta, 0));
                         break;
 
-                    case Block.Geometry.NorthFullRamp:
-                        face.Normal = new Vector3(0, 1, -1);
-
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 1, v + 1);
-                        break;
-
-                    case Block.Geometry.SouthFullRamp:
-                        face.Normal = new Vector3(0, 1, 1);
-
-                        face.Verts[0] = new Vector3(h, d + 1, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 1, v);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[3] = new Vector3(h, d, v + 1);
-                        break;
-
-                    case Block.Geometry.EastFullRamp:
-                        face.Normal = new Vector3(-1, 1, 0);
-
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d+ 1, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
-                        face.Verts[3] = new Vector3(h, d, v + 1);
-                        break;
-
-
-                    case Block.Geometry.WestFullRamp:
-                        face.Normal = new Vector3(1, 1, 0);
-
-                        face.Verts[0] = new Vector3(h, d + 1, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 1, v + 1);
-                        break;
-
-                    case Block.Geometry.NorthHalfLowerRamp:
-                        face.Normal = new Vector3(0, 1, -0.5f);
-
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
-                        break;
-
-                    case Block.Geometry.SouthHalfLowerRamp:
-                        face.Normal = new Vector3(0, 1, 0.5f);
-
-                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[3] = new Vector3(h, d, v + 1);
-                        break;
-
-                    case Block.Geometry.EastHalfLowerRamp:
-                        face.Normal = new Vector3(-0.5f, 1, 0);
-
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[3] = new Vector3(h, d, v + 1);
-                        break;
-
-
-                    case Block.Geometry.WestHalfLowerRamp:
-                        face.Normal = new Vector3(0.5f, 1, 0);
-
-                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
-                        break;
-
-                    case Block.Geometry.NorthHalfUpperRamp:
-                        face.Normal = new Vector3(0, 1, -0.5f);
-
-                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 1f, v + 1);
-                        break;
-
-                    case Block.Geometry.SouthHalfUpperRamp:
-                        face.Normal = new Vector3(0, 1, 0.5f);
-
-                        face.Verts[0] = new Vector3(h, d + 1f, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 1f, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
-                        break;
-
-                    case Block.Geometry.EastHalfUpperRamp:
-                        face.Normal = new Vector3(-0.5f, 1, 0);
-
-                        face.Verts[0] = new Vector3(h, d + 0.5f, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 1, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 1f, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
-                        break;
-
-
-                    case Block.Geometry.WestHalfUpperRamp:
-                        face.Normal = new Vector3(0.5f, 1, 0);
-
-                        face.Verts[0] = new Vector3(h, d + 1f, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[3] = new Vector3(h, d + 1f, v + 1);
+                    case Directions.West:
+                        norm = Vector3.Cross(Vector3.UnitZ * -1.0f, new Vector3(-1, delta, 0));
                         break;
                 }
 
-                face.Normal.Normalize();
+                norm.Normalize();
+            }
 
-                return face;
+            public static Face[] BuildAboveGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
+            {
+                List<Face> faces = new List<Face>();
+
+                Face face = new Face();
+                faces.Add(face);
+                face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
+                face.UVs = GetConstUVOffsets(0);
+
+                float maxD = d + block.GetMaxD();
+                float minD = d + block.GetMinD();
+                float delta = block.GetMaxD() - block.GetMinD();
+
+                switch (block.Geom)
+                {
+                    case Block.Geometries.Empty:
+                    case Block.Geometries.Invisible:
+                        return new Face[0];
+
+                    case Block.Geometries.Solid:
+                        face.Normal = Vector3.UnitY;
+                        face.Verts[0] = new Vector3(h, maxD, v);
+                        face.Verts[1] = new Vector3(h + 1, maxD, v);
+                        face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
+                        face.Verts[3] = new Vector3(h, maxD, v + 1);
+                        SetTopVectorForDir(ref face.Normal,Directions.None,0);
+                        break;
+
+                    case Block.Geometries.FullRamp:
+                    case Block.Geometries.LowerRamp:
+                        switch (block.Dir)
+                        {
+                            case Directions.North:
+                                face.Verts[0] = new Vector3(h, minD, v);
+                                face.Verts[1] = new Vector3(h + 1, minD, v);
+                                face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
+                                face.Verts[3] = new Vector3(h, maxD, v + 1);
+
+                                SetTopVectorForDir(ref face.Normal, block.Dir, delta);
+                                break;
+
+                            case Directions.South:
+                                face.Verts[0] = new Vector3(h, maxD, v);
+                                face.Verts[1] = new Vector3(h + 1, maxD, v);
+                                face.Verts[2] = new Vector3(h + 1, minD, v + 1);
+                                face.Verts[3] = new Vector3(h, minD, v + 1);
+
+                                SetTopVectorForDir(ref face.Normal, block.Dir, delta);
+                                break;
+
+                            case Directions.East:
+                                face.Verts[0] = new Vector3(h, minD, v);
+                                face.Verts[1] = new Vector3(h + 1, maxD, v);
+                                face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
+                                face.Verts[3] = new Vector3(h, minD, v + 1);
+
+                                SetTopVectorForDir(ref face.Normal, block.Dir, delta);
+                                break;
+
+                            case Directions.West:
+                                face.Verts[0] = new Vector3(h, maxD, v);
+                                face.Verts[1] = new Vector3(h + 1, minD, v);
+                                face.Verts[2] = new Vector3(h + 1, minD, v + 1);
+                                face.Verts[3] = new Vector3(h, maxD, v + 1);
+
+                                SetTopVectorForDir(ref face.Normal, block.Dir, delta);
+                                break;
+
+                            case Directions.NorthEast:
+                                // south lower to north higher face
+                                face.Verts[0] = new Vector3(h, minD, v);
+                                face.Verts[1] = new Vector3(h + 1, minD, v);
+                                face.Verts[2] = new Vector3(h + 1, maxD, v + 1);
+                                face.Verts[3] = face.Verts[2];
+                                SetTopVectorForDir(ref face.Normal, Directions.North, delta);
+  
+                                // west lower to east higher
+                                face = new Face();
+                                faces.Add(face);
+                                face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
+                                face.UVs = new Vector2[4] { new Vector2(0, 1), new Vector2(1, 0), new Vector2(0, 0), new Vector2(1, 1) };
+
+                                face.Verts[0] = new Vector3(h, minD, v);
+                                face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
+                                face.Verts[2] = new Vector3(h, minD, v + 1);
+                                face.Verts[3] = face.Verts[2];
+
+                                SetTopVectorForDir(ref face.Normal, Directions.East, delta);
+                                break;
+
+                            case Directions.NorthWest:
+                                // south lower to north higher face
+                                face.Verts[0] = new Vector3(h, minD, v);
+                                face.Verts[1] = new Vector3(h + 1, minD, v);
+                                face.Verts[2] = new Vector3(h, maxD, v+1);
+                                face.Verts[3] = face.Verts[2];
+
+                                face.UVs = new Vector2[4] { new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 0), new Vector2(1, 0) };
+
+                                SetTopVectorForDir(ref face.Normal, Directions.North, delta);
+
+                                // east lower to west higher face
+                                face = new Face();
+                                faces.Add(face);
+                                face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
+                                face.UVs = new Vector2[4] { new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1) };
+
+                                face.Verts[0] = new Vector3(h+1, minD, v);
+                                face.Verts[1] = new Vector3(h+1, minD, v + 1);
+                                face.Verts[2] = new Vector3(h, maxD, v+1);
+                                face.Verts[3] = face.Verts[2];
+                                SetTopVectorForDir(ref face.Normal, Directions.West, delta);
+                                break;
+
+                            case Directions.SouthEast:
+                                 // west lower to east higher face
+                                face.Verts[0] = new Vector3(h, minD, v);
+                                face.Verts[1] = new Vector3(h + 1, maxD, v);
+                                face.Verts[2] = new Vector3(h, minD, v + 1);
+                                face.Verts[3] = face.Verts[2];
+
+                                face.UVs = new Vector2[4] { new Vector2(0, 1), new Vector2(1, 1), new Vector2(0, 0), new Vector2(1, 0) };
+                                SetTopVectorForDir(ref face.Normal, Directions.East, delta);
+
+                                // north lower to south higher face
+                                face = new Face();
+                                faces.Add(face);
+                                face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
+                                face.UVs = new Vector2[4] { new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 0), new Vector2(0, 1) };
+
+                                face.Verts[0] = new Vector3(h + 1, maxD, v);
+                                face.Verts[1] = new Vector3(h + 1, minD, v + 1);
+                                face.Verts[2] = new Vector3(h, minD, v + 1);
+                                face.Verts[3] = face.Verts[2];
+
+                                SetTopVectorForDir(ref face.Normal, Directions.South, delta);
+                                break;
+
+                            case Directions.SouthWest:
+                                // north lower to south higher face
+                                face.Verts[0] = new Vector3(h, maxD, v);
+                                face.Verts[1] = new Vector3(h + 1, minD, v+1);
+                                face.Verts[2] = new Vector3(h, minD, v + 1);
+                                face.Verts[3] = face.Verts[2];
+
+                                SetTopVectorForDir(ref face.Normal, Directions.South, delta);
+
+                                // east lower to west higher face
+                                face = new Face();
+                                faces.Add(face);
+                                face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
+                                face.UVs = new Vector2[4] { new Vector2(0, 1), new Vector2(1, 1), new Vector2(1, 0), new Vector2(0, 0) };
+
+                                face.Verts[0] = new Vector3(h, maxD, v);
+                                face.Verts[1] = new Vector3(h + 1, minD, v);
+                                face.Verts[2] = new Vector3(h + 1, minD, v + 1);
+                                face.Verts[3] = face.Verts[2];
+
+                                SetTopVectorForDir(ref face.Normal, Directions.West, delta);
+                                break;
+
+                        }
+                        break;
+                }
+
+                return faces.ToArray();
             }
 
             public static Face BuildBelowGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
-                if (block.Geom == Block.Geometry.Empty)
+                if (block.Geom == Block.Geometries.Empty || block.Geom == Block.Geometries.Invisible)
                     return Face.Empty;
 
                 Face face = new Face();
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = GetUVsForOffset(imageOffset, texture);
+                face.UVs = GetConstUVOffsets(0);
                 Array.Reverse(face.UVs);
                 face.Normal = Vector3.UnitY * -1.0f;
 
-                float ZOffset = 0;
-                if (block.Geom == Block.Geometry.HalfUpper)
-                    ZOffset = 0.5f;
+                float minD = d;
 
-                face.Verts[0] = new Vector3(h, d + ZOffset, v);
-                face.Verts[1] = new Vector3(h, d + ZOffset, v + 1);
-                face.Verts[2] = new Vector3(h + 1, d + ZOffset, v + 1);
-                face.Verts[3] = new Vector3(h + 1, d + ZOffset, v);
+                if (block.Geom != Block.Geometries.LowerRamp)
+                    minD = d + block.GetMinD();
+
+                face.Verts[0] = new Vector3(h, minD, v);
+                face.Verts[1] = new Vector3(h, minD, v + 1);
+                face.Verts[2] = new Vector3(h + 1, minD, v + 1);
+                face.Verts[3] = new Vector3(h + 1, minD, v);
 
                 return face;
             }
-
-            private static float RampCenterUOffset = 0.017f; //015625f;
 
             public static Face BuildNorthGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
@@ -505,191 +705,200 @@ namespace GridWorld
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = GetUVsForOffset(imageOffset, texture);
                 //Array.Reverse(face.UVs);
                 face.Normal = Vector3.UnitZ;
 
-                float lower = 0;
-                float upper = 1;
-                if (block.Geom == Block.Geometry.HalfUpper)
-                    lower = 0.5f;
-                else if (block.Geom == Block.Geometry.HalfLower || IsLowerRamp(block) || block.Geom == Block.Geometry.SouthHalfUpperRamp)
-                    upper = 0.5f;
+                float maxD = d + block.GetMaxD();
+                float minD = d + block.GetMinD();
+                float delta = block.GetMaxD() - block.GetMinD();
+
+                face.UVs = GetConstUVOffsets(delta);
 
                 switch (block.Geom)
                 {
-                    case Block.Geometry.Empty:
-                    case Block.Geometry.SouthFullRamp:
+                    case Block.Geometries.Empty:
+                    case Block.Geometries.Invisible:
                         return Face.Empty;
 
-                    case Block.Geometry.HalfUpper:
-                    case Block.Geometry.HalfLower:
-                    case Block.Geometry.Solid:
-                    case Block.Geometry.NorthFullRamp:
-                    case Block.Geometry.NorthHalfLowerRamp:
-                    case Block.Geometry.NorthHalfUpperRamp:
-                    case Block.Geometry.SouthHalfUpperRamp:
-                        face.Verts[3] = new Vector3(h, d + lower, v + 1);
-                        face.Verts[0] = new Vector3(h, d + upper, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + upper, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d + lower, v + 1);
+                    case Block.Geometries.Solid:
+                    case Block.Geometries.FullRamp:
+                        if (block.Geom == Block.Geometries.Solid || block.Dir == Directions.North)
+                        {
+                            face.Verts[3] = new Vector3(h, minD, v + 1);
+                            face.Verts[0] = new Vector3(h, maxD, v + 1);
+                            face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
+                            face.Verts[2] = new Vector3(h + 1, minD, v + 1);
+                        }
+                        else if (block.Dir != Directions.South)
+                        {
+                            switch (block.Dir)
+                            {
+                                case Directions.East:
+                                case Directions.NorthEast:
+                                    face.Verts[0] = new Vector3(h, minD, v + 1);
+                                    face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
+                                    face.Verts[2] = new Vector3(h + 1, minD, v + 1);
+                                    face.Verts[3] = face.Verts[2];
+                                    break;
+
+                                case Directions.West:
+                                case Directions.NorthWest:
+                                    face.Verts[0] = new Vector3(h, maxD, v + 1);
+                                    face.Verts[1] = new Vector3(h + 1, minD, v + 1);
+                                    face.Verts[2] = new Vector3(h, minD, v + 1);
+                                    face.Verts[3] = face.Verts[2];
+                                    break;
+
+                                default:
+                                    return Face.Empty;
+                            }
+                        }
+                        else
+                            return Face.Empty;
                         break;
 
-                    case Block.Geometry.Fluid:
-                        face.Verts[3] = new Vector3(h, d, v + 1);
-                        face.Verts[0] = new Vector3(h, d + 0.95f, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.95f, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        break;
+                    case Block.Geometries.LowerRamp:
+                        switch(block.Dir)
+                        {
+                            case Directions.North:
+                                face.Verts[3] = new Vector3(h, d, v + 1);
+                                face.Verts[0] = new Vector3(h, maxD, v + 1);
+                                face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
+                                face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                                face.UVs = GetConstUVOffsets(1);
+                                break;
 
-                    case Block.Geometry.EastFullRamp:
-                        face.Verts[0] = new Vector3(h, d, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + 1, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[3] = face.Verts[2];
+                            case Directions.South:
+                            case Directions.SouthEast:
+                            case Directions.SouthWest:
+                                face.Verts[3] = new Vector3(h, d, v + 1);
+                                face.Verts[0] = new Vector3(h, minD, v + 1);
+                                face.Verts[1] = new Vector3(h + 1, minD, v + 1);
+                                face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                                face.UVs = GetConstUVOffsets(1);
+                                break;
 
-                        face.UVs = new Vector2[3] { face.UVs[1], face.UVs[0], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset) };
-                        break;
+                            case Directions.East:
+                            case Directions.NorthEast:
+                                face.Verts[3] = new Vector3(h, d, v + 1);
+                                face.Verts[0] = new Vector3(h, minD, v + 1);
+                                face.Verts[1] = new Vector3(h + 1, maxD, v + 1);
+                                face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                                face.UVs = GetConstUVOffsets(minD - d, maxD - d);
+                                break;
 
-                    case Block.Geometry.WestFullRamp:
-                        face.Verts[0] = new Vector3(h, d, v + 1);
-                        face.Verts[1] = new Vector3(h, d + 1, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[1], face.UVs[0] };
-                        break;
-
-                    case Block.Geometry.EastHalfLowerRamp:
-                        face.Verts[0] = new Vector3(h, d, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[1], face.UVs[0], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f) };
-                        break;
-
-                    case Block.Geometry.WestHalfLowerRamp:
-                        face.Verts[0] = new Vector3(h, d, v + 1);
-                        face.Verts[1] = new Vector3(h, d + 0.5f, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[1], face.UVs[0] };
-                        break;
-
-                    case Block.Geometry.EastHalfUpperRamp:
-
-                        face.Verts[3] = new Vector3(h, d + 0, v + 1);
-                        face.Verts[0] = new Vector3(h, d + 0.5f, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + 1, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d + 0, v + 1);
-
-                        break;
-
-                    case Block.Geometry.WestHalfUpperRamp:
-
-                        face.Verts[3] = new Vector3(h, d + 0, v + 1);
-                        face.Verts[0] = new Vector3(h, d + 1, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d + 0, v + 1);
+                            case Directions.West:
+                            case Directions.NorthWest:
+                                face.Verts[3] = new Vector3(h, d, v + 1);
+                                face.Verts[0] = new Vector3(h, maxD, v + 1);
+                                face.Verts[1] = new Vector3(h + 1, minD, v + 1);
+                                face.Verts[2] = new Vector3(h + 1, d, v + 1);
+                                face.UVs = GetConstUVOffsets(maxD - d, minD - d);
+                                break;   
+                        }
                         break;
                 }
-
                 return face;
             }
 
             public static Face BuildSouthGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
+                float maxD = d + block.GetMaxD();
+                float minD = d + block.GetMinD();
+                float delta = block.GetMaxD() - block.GetMinD();
+
                 Face face = new Face();
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = GetUVsForOffset(imageOffset, texture);
-                Array.Reverse(face.UVs);
-                face.Normal = Vector3.UnitZ * -1;
+                face.UVs = GetConstUVOffsets(delta);
 
-                float lower = 0;
-                float upper = 1;
-                if (block.Geom == Block.Geometry.HalfUpper)
-                    lower = 0.5f;
-                else if (block.Geom == Block.Geometry.HalfLower || IsLowerRamp(block) || block.Geom == Block.Geometry.NorthHalfUpperRamp)
-                    upper = 0.5f;
+                face.Normal = Vector3.UnitZ * -1;
 
                 switch (block.Geom)
                 {
-                    case Block.Geometry.Empty:
-                    case Block.Geometry.NorthFullRamp:
+                    case Block.Geometries.Empty:
+                    case Block.Geometries.Invisible:
                         return Face.Empty;
 
-                    case Block.Geometry.HalfLower:
-                    case Block.Geometry.HalfUpper:
-                    case Block.Geometry.Solid:
-                    case Block.Geometry.SouthFullRamp:
-                    case Block.Geometry.SouthHalfLowerRamp:
-                    case Block.Geometry.NorthHalfUpperRamp:
-                    case Block.Geometry.SouthHalfUpperRamp:
-                        face.Verts[0] = new Vector3(h, d + lower, v);
-                        face.Verts[1] = new Vector3(h + 1, d + lower,v);
-                        face.Verts[2] = new Vector3(h + 1, d + upper, v);
-                        face.Verts[3] = new Vector3(h, d + upper, v);
+                    case Block.Geometries.Solid:
+                    case Block.Geometries.FullRamp:
+                        if (block.Geom == Block.Geometries.Solid || block.Dir == Directions.South)
+                        {
+                            face.Verts[0] = new Vector3(h, minD, v);
+                            face.Verts[1] = new Vector3(h + 1, minD, v);
+                            face.Verts[2] = new Vector3(h + 1, maxD, v);
+                            face.Verts[3] = new Vector3(h, maxD, v);
+                            Array.Reverse(face.UVs);
+                        }
+                        else if (block.Dir != Directions.North)
+                        {
+                            switch (block.Dir)
+                            {
+                                case Directions.West:
+                                case Directions.SouthWest:
+                                    face.Verts[0] = new Vector3(h + 1, minD, v);
+                                    face.Verts[1] = new Vector3(h, maxD, v);
+                                    face.Verts[2] = new Vector3(h, minD, v);
+                                    face.Verts[3] = face.Verts[2];
+                                    break;
+
+                                case Directions.East:
+                                case Directions.SouthEast:
+                                    face.Verts[0] = new Vector3(h + 1, maxD, v);
+                                    face.Verts[1] = new Vector3(h, minD, v);
+                                    face.Verts[2] = new Vector3(h + 1, minD, v);
+
+                                    face.Verts[3] = face.Verts[2];
+                                    break;
+
+                                default:
+                                    return Face.Empty;
+                            }
+                        }
+                        else
+                            return Face.Empty;
                         break;
 
-                    case Block.Geometry.Fluid:
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.95f, v);
-                        face.Verts[3] = new Vector3(h, d + 0.95f, v);
-                        break;
+                    case Block.Geometries.LowerRamp:
+                        switch (block.Dir)
+                        {
+                            case Directions.North:
+                            case Directions.NorthEast:
+                            case Directions.NorthWest:
+                                face.Verts[0] = new Vector3(h + 1, minD, v);
+                                face.Verts[1] = new Vector3(h, minD, v);
+                                face.Verts[2] = new Vector3(h, d, v);
+                                face.Verts[3] = new Vector3(h + 1, d, v);
+                                face.UVs = GetConstUVOffsets(minD-d);
+                                break;
 
-                    case Block.Geometry.EastFullRamp:
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 1, v);
-                        face.Verts[3] = face.Verts[2];
+                            case Directions.South:
+                                face.Verts[0] = new Vector3(h + 1, maxD, v);
+                                face.Verts[1] = new Vector3(h, maxD, v);
+                                face.Verts[2] = new Vector3(h, d, v);
+                                face.Verts[3] = new Vector3(h + 1, d, v);
+                                face.UVs = GetConstUVOffsets(1);
+                                break;
 
-                        face.UVs = new Vector2[3] { face.UVs[3], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[2] };
-                        break;
+                            case Directions.East:
+                            case Directions.SouthEast:
+                                face.Verts[0] = new Vector3(h + 1, maxD, v);
+                                face.Verts[1] = new Vector3(h, minD, v);
+                                face.Verts[2] = new Vector3(h, d, v);
+                                face.Verts[3] = new Vector3(h + 1, d, v);
+                                face.UVs = GetConstUVOffsets(maxD - d, minD - d);
+                                break;
 
-                    case Block.Geometry.WestFullRamp:
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h, d + 1, v);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[2], face.UVs[3] };
-                        break;
-
-                    case Block.Geometry.EastHalfLowerRamp:
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[3], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[2] };
-                        break;
-
-                    case Block.Geometry.WestHalfLowerRamp:
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v);
-                        face.Verts[2] = new Vector3(h, d + 0.5f, v);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[2], face.UVs[3] };
-                        break;
-
-                    case Block.Geometry.EastHalfUpperRamp:
-                        face.Verts[0] = new Vector3(h, d + 0, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 0, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 1, v);
-                        face.Verts[3] = new Vector3(h, d + 0.5f, v);
-                        break;
-
-                    case Block.Geometry.WestHalfUpperRamp:
-                        face.Verts[0] = new Vector3(h, d + 0, v);
-                        face.Verts[1] = new Vector3(h + 1, d + 0, v);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v);
-                        face.Verts[3] = new Vector3(h, d + 1, v);
+                            case Directions.West:
+                            case Directions.SouthWest:
+                                face.Verts[0] = new Vector3(h + 1, minD, v); 
+                                face.Verts[1] = new Vector3(h, maxD, v);
+                                face.Verts[2] = new Vector3(h, d, v);
+                                face.Verts[3] = new Vector3(h + 1, d, v);
+                                face.UVs = GetConstUVOffsets(minD - d, maxD - d);
+                                break;
+                        }
                         break;
                 }
 
@@ -698,193 +907,209 @@ namespace GridWorld
 
             public static Face BuildEastGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
+                float maxD = d + block.GetMaxD();
+                float minD = d + block.GetMinD();
+                float delta = block.GetMaxD() - block.GetMinD();
+
                 Face face = new Face();
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = GetUVsForOffset(imageOffset, texture);
-                //Array.Reverse(face.UVs);
+                face.UVs = GetConstUVOffsets(delta);
+                
                 face.Normal = Vector3.UnitX;
-
-                float lower = 0;
-                float upper = 1;
-                if (block.Geom == Block.Geometry.HalfUpper)
-                    lower = 0.5f;
-                else if (block.Geom == Block.Geometry.HalfLower || IsLowerRamp(block) || block.Geom == Block.Geometry.WestHalfUpperRamp)
-                    upper = 0.5f;
 
                 switch (block.Geom)
                 {
-                    case Block.Geometry.Empty:
-                    case Block.Geometry.WestFullRamp:
+                    case Block.Geometries.Empty:
+                    case Block.Geometries.Invisible:
                         return Face.Empty;
 
-                    case Block.Geometry.HalfLower:
-                    case Block.Geometry.HalfUpper:
-                    case Block.Geometry.Solid:
-                    case Block.Geometry.EastFullRamp:
-                    case Block.Geometry.EastHalfLowerRamp:
-                    case Block.Geometry.EastHalfUpperRamp:
-                    case Block.Geometry.WestHalfUpperRamp:
-                        face.Verts[2] = new Vector3(h + 1, d + lower, v);
-                        face.Verts[3] = new Vector3(h + 1, d + lower, v + 1);
-                        face.Verts[0] = new Vector3(h + 1, d + upper, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + upper, v);
+                    case Block.Geometries.Solid:
+                    case Block.Geometries.FullRamp:
+                        if (block.Geom == Block.Geometries.Solid || block.Dir == Directions.East)
+                        {
+                            face.Verts[2] = new Vector3(h + 1, minD, v);
+                            face.Verts[3] = new Vector3(h + 1, minD, v + 1);
+                            face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
+                            face.Verts[1] = new Vector3(h + 1, maxD, v);
+                        }
+                        else if (block.Dir != Directions.West)
+                        {
+                            switch (block.Dir)
+                            {
+                                case Directions.North:
+                                case Directions.NorthEast:
+                                    face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
+                                    face.Verts[1] = new Vector3(h + 1, minD, v);
+                                    face.Verts[2] = new Vector3(h + 1, minD, v + 1);
+                                    face.Verts[3] = face.Verts[2];
+      
+                                    break;
+
+                                case Directions.South:
+                                case Directions.SouthEast:
+                                    face.Verts[0] = new Vector3(h + 1, minD, v + 1);
+                                    face.Verts[1] = new Vector3(h + 1, maxD, v);
+                                    face.Verts[2] = new Vector3(h + 1, minD, v);
+                                    face.Verts[3] = face.Verts[2];
+                                    break;
+
+                                default:
+                                    return Face.Empty;
+                            }
+                        }
+                        else
+                            return Face.Empty;
                         break;
 
-                    case Block.Geometry.Fluid:
-                        face.Verts[2] = new Vector3(h + 1, d, v);
-                        face.Verts[3] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[0] = new Vector3(h + 1, d + 0.95f, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.95f, v);
-                        break;
+                    case Block.Geometries.LowerRamp:
+                        switch (block.Dir)
+                        {
+                            case Directions.North:
+                            case Directions.NorthEast:
+                                face.Verts[2] = new Vector3(h + 1, d, v);
+                                face.Verts[3] = new Vector3(h + 1, d, v + 1);
+                                face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
+                                face.Verts[1] = new Vector3(h + 1, minD, v);
+                                face.UVs = GetConstUVOffsets(maxD - d, minD - d);
+                                break;
 
-                    case Block.Geometry.NorthFullRamp:
-                        face.Verts[0] = new Vector3(h + 1, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d + 1, v + 1);
-                        face.Verts[3] = face.Verts[2];
+                            case Directions.South:
+                            case Directions.SouthEast:
+                                face.Verts[2] = new Vector3(h + 1, d, v);
+                                face.Verts[3] = new Vector3(h + 1, d, v + 1);
+                                face.Verts[0] = new Vector3(h + 1, minD, v + 1);
+                                face.Verts[1] = new Vector3(h + 1, maxD, v);
+                                face.UVs = GetConstUVOffsets(minD - d, maxD - d);
+                                break;
 
-                        face.UVs = new Vector2[3] { face.UVs[0], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[1] };
-                        break;
+                            case Directions.East:
+                                face.Verts[2] = new Vector3(h + 1, d, v);
+                                face.Verts[3] = new Vector3(h + 1, d, v + 1);
+                                face.Verts[0] = new Vector3(h + 1, maxD, v + 1);
+                                face.Verts[1] = new Vector3(h + 1, maxD, v);
+                                face.UVs = GetConstUVOffsets(1);
+                                break;
 
-                    case Block.Geometry.SouthFullRamp:
-                        face.Verts[0] = new Vector3(h + 1, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d + 1, v);
-                        face.Verts[3] = face.Verts[2];
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[1], face.UVs[0] };
-                        break;
-
-                    case Block.Geometry.NorthHalfLowerRamp:
-                        face.Verts[0] = new Vector3(h + 1, d,v);
-                        face.Verts[1] = new Vector3(h + 1, d, v+ 1);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[0], face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[1] };
-                        break;
-
-                    case Block.Geometry.SouthHalfLowerRamp:
-                        face.Verts[0] = new Vector3(h + 1, d, v);
-                        face.Verts[1] = new Vector3(h + 1, d, v + 1);
-                        face.Verts[2] = new Vector3(h + 1, d + 0.5f, v);
-                        face.Verts[3] = face.Verts[2];
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[1], face.UVs[0] };
-                        break;
-
-                    case Block.Geometry.NorthHalfUpperRamp:
-                        face.Verts[2] = new Vector3(h + 1, d + 0, v);
-                        face.Verts[3] = new Vector3(h + 1, d + 0, v + 1);
-                        face.Verts[0] = new Vector3(h + 1, d + 1f, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + 0.5f, v);
-                        break;
-
-                    case Block.Geometry.SouthHalfUpperRamp:
-                        face.Verts[2] = new Vector3(h + 1, d + 0, v);
-                        face.Verts[3] = new Vector3(h + 1, d + 0, v + 1);
-                        face.Verts[0] = new Vector3(h + 1, d + 0.5f, v + 1);
-                        face.Verts[1] = new Vector3(h + 1, d + 1, v);
+                            case Directions.West:
+                            case Directions.SouthWest:
+                            case Directions.NorthWest:
+                                face.Verts[2] = new Vector3(h + 1, d, v);
+                                face.Verts[3] = new Vector3(h + 1, d, v + 1);
+                                face.Verts[0] = new Vector3(h + 1, minD, v + 1);
+                                face.Verts[1] = new Vector3(h + 1, minD, v);
+                                face.UVs = GetConstUVOffsets(minD - d);
+                                break;
+                        }
                         break;
                 }
-
                 return face;
             }
 
             public static Face BuildWestGeometry(int imageOffset, int texture, Int64 h, Int64 v, Int64 d, Block block)
             {
+                float maxD = d + block.GetMaxD();
+                float minD = d + block.GetMinD();
+                float delta = block.GetMaxD() - block.GetMinD();
+
                 Face face = new Face();
 
                 face.Verts = new Vector3[4] { Vector3.Zero, Vector3.Zero, Vector3.Zero, Vector3.Zero };
 
-                face.UVs = GetUVsForOffset(imageOffset, texture);
-                Array.Reverse(face.UVs);
-                face.Normal = Vector3.UnitX * -1.0f;
+                face.UVs = GetConstUVOffsets(delta);
 
-                float lower = 0;
-                float upper = 1;
-                if (block.Geom == Block.Geometry.HalfUpper)
-                    lower = 0.5f;
-                else if (block.Geom == Block.Geometry.HalfLower || IsLowerRamp(block) || block.Geom == Block.Geometry.EastHalfUpperRamp)
-                    upper = 0.5f;
+                face.Normal = Vector3.UnitX * -1.0f;
 
                 switch (block.Geom)
                 {
-                    case Block.Geometry.Empty:
-                    case Block.Geometry.EastFullRamp:
+                    case Block.Geometries.Empty:
+                    case Block.Geometries.Invisible:
                         return Face.Empty;
 
-                    case Block.Geometry.HalfLower:
-                    case Block.Geometry.HalfUpper:
-                    case Block.Geometry.Solid:
-                    case Block.Geometry.WestFullRamp:
-                    case Block.Geometry.WestHalfLowerRamp:
-                    case Block.Geometry.EastHalfUpperRamp:
-                    case Block.Geometry.WestHalfUpperRamp:
-                        face.Verts[1] = new Vector3(h, d + lower, v);
-                        face.Verts[2] = new Vector3(h, d + upper, v);
-                        face.Verts[3] = new Vector3(h, d + upper, v + 1);
-                        face.Verts[0] = new Vector3(h, d + lower, v + 1);
+                    case Block.Geometries.Solid:
+                    case Block.Geometries.FullRamp:
+                        if (block.Geom == Block.Geometries.Solid || block.Dir == Directions.West)
+                        {
+                            face.Verts[1] = new Vector3(h, minD, v);
+                            face.Verts[2] = new Vector3(h, maxD, v);
+                            face.Verts[3] = new Vector3(h, maxD, v + 1);
+                            face.Verts[0] = new Vector3(h, minD, v + 1);
+                            Array.Reverse(face.UVs);
+                        }
+                        else if (block.Dir != Directions.East)
+                        {
+                            switch (block.Dir)
+                            {
+                                case Directions.North:
+                                case Directions.NorthWest:
+                                    face.Verts[0] = new Vector3(h, minD, v);
+                                    face.Verts[1] = new Vector3(h, maxD, v + 1);
+                                    face.Verts[2] = new Vector3(h, minD, v + 1);
+
+                                    face.Verts[3] = face.Verts[2];
+                                    break;
+
+                                case Directions.South:
+                                case Directions.SouthWest:
+                                    face.Verts[0] = new Vector3(h, maxD, v); 
+                                    face.Verts[1] = new Vector3(h, minD, v + 1);
+                                    face.Verts[2] = new Vector3(h, minD, v);
+
+                                    face.Verts[3] = face.Verts[2];
+                                    break;
+                                default:
+                                    return Face.Empty;
+                            }
+                        }
+                        else
+                            return Face.Empty;
                         break;
 
-                    case Block.Geometry.Fluid:
-                        face.Verts[1] = new Vector3(h, d, v);
-                        face.Verts[2] = new Vector3(h, d + 0.95f, v);
-                        face.Verts[3] = new Vector3(h, d + 0.95f, v + 1);
-                        face.Verts[0] = new Vector3(h, d, v + 1);
-                        break;
+                    case Block.Geometries.LowerRamp:
+                        switch (block.Dir)
+                        {
+                            case Directions.North:
+                            case Directions.NorthWest:
+                                face.Verts[0] = new Vector3(h, minD, v);
+                                face.Verts[1] = new Vector3(h, maxD, v + 1);
+                                face.Verts[2] = new Vector3(h, d, v + 1);
+                                face.Verts[3] = new Vector3(h, d, v);
+                                face.UVs = GetConstUVOffsets(minD - d, maxD - d);
+                               
+                                break;
 
-                    case Block.Geometry.NorthFullRamp:
-                        face.Verts[0] = new Vector3(h, d, v + 1);
-                        face.Verts[1] = new Vector3(h, d, v);
-                        face.Verts[2] = new Vector3(h, d + 1, v + 1);
-                        face.Verts[3] = face.Verts[2];
+                            case Directions.South:
+                            case Directions.SouthWest:
+                                face.Verts[0] = new Vector3(h, maxD, v);
+                                face.Verts[1] = new Vector3(h, minD, v + 1);
+                                face.Verts[2] = new Vector3(h, d, v + 1);
+                                face.Verts[3] = new Vector3(h, d, v);
+                                face.UVs = GetConstUVOffsets(maxD - d, minD - d);
+                                break;
 
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[2], face.UVs[3] };
-                        break;
+                            case Directions.East:
+                            case Directions.NorthEast:
+                            case Directions.SouthEast:
+                                face.Verts[1] = new Vector3(h, d, v);
+                                face.Verts[2] = new Vector3(h, minD, v);
+                                face.Verts[3] = new Vector3(h, minD, v + 1);
+                                face.Verts[0] = new Vector3(h, d, v + 1);
+                                face.UVs = GetConstUVOffsets(minD-d);
+                                Array.Reverse(face.UVs);
+                                break;
 
-                    case Block.Geometry.SouthFullRamp:
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h, d + 1, v);
-                        face.Verts[2] = new Vector3(h, d, v + 1);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset), face.UVs[2], face.UVs[3] };
-                        break;
-
-                    case Block.Geometry.NorthHalfLowerRamp:
-                        face.Verts[0] = new Vector3(h, d, v + 1);
-                        face.Verts[1] = new Vector3(h, d, v);
-                        face.Verts[2] = new Vector3(h, d + 0.5f, v + 1);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[2], face.UVs[3] };
-                        break;
-
-                    case Block.Geometry.SouthHalfLowerRamp:
-                        face.Verts[0] = new Vector3(h, d, v);
-                        face.Verts[1] = new Vector3(h, d + 0.5f, v);
-                        face.Verts[2] = new Vector3(h, d, v + 1);
-                        face.Verts[3] = face.Verts[2];
-
-                        face.UVs = new Vector2[3] { face.UVs[3] + ((face.UVs[1] - face.UVs[3]) * 0.5f) + new Vector2(0, RampCenterUOffset * 0.5f), face.UVs[2], face.UVs[3] };
-                        break;
-
-                    case Block.Geometry.NorthHalfUpperRamp:
-                        face.Verts[1] = new Vector3(h, d + 0, v);
-                        face.Verts[2] = new Vector3(h, d + 0.5f, v);
-                        face.Verts[3] = new Vector3(h, d + 1, v + 1);
-                        face.Verts[0] = new Vector3(h, d + 0 ,v + 1);
-                        break;
-
-                    case Block.Geometry.SouthHalfUpperRamp:
-                        face.Verts[1] = new Vector3(h, d + 0, v);
-                        face.Verts[2] = new Vector3(h, d + 1, v);
-                        face.Verts[3] = new Vector3(h, d + 0.5f, v + 1);
-                        face.Verts[0] = new Vector3(h, d + 0, v + 1);
+                            case Directions.West:
+                                face.Verts[1] = new Vector3(h, d, v);
+                                face.Verts[2] = new Vector3(h, maxD, v);
+                                face.Verts[3] = new Vector3(h, maxD, v + 1);
+                                face.Verts[0] = new Vector3(h, d, v + 1);
+                                face.UVs = GetConstUVOffsets(1);
+                                Array.Reverse(face.UVs);
+                                break;
+                        }
                         break;
                 }
-
                 return face;
             }
 
@@ -979,7 +1204,7 @@ namespace GridWorld
                             if (def.Bottom != World.BlockDef.EmptyID)
                                 bottomTexture = def.Bottom;
 
-                            if (block.Geom != Block.Geometry.Empty)
+                            if (block.Geom != Block.Geometries.Empty && block.Geom != Block.Geometries.Invisible)
                             {
                                 Int64 blockWorldH = cluster.Origin.H + h;
                                 Int64 blockWorldV = cluster.Origin.V + v;
@@ -997,16 +1222,16 @@ namespace GridWorld
                                 if (d != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, cluster.GetBlockRelative( h, v, d - 1)))
                                     geometry.GetMesh(World.BlockTextureToTextureID(bottomTexture)).Add(BuildBelowGeometry(World.BlockTextureToTextureOffset(bottomTexture), World.BlockTextureToTextureID(bottomTexture),  h, v, d, block));
 
-                                if (NorthIsOpen(block, GetBlockNorthRelative(cluster, northCluster, h, v, d)))
+                                if (DirectionIsOpen(block, GetBlockNorthRelative(cluster, northCluster, h, v, d),Directions.North))
                                     geometry.GetMesh(World.BlockTextureToTextureID(sideTexture[0])).Add(BuildNorthGeometry(World.BlockTextureToTextureOffset(sideTexture[0]), World.BlockTextureToTextureID(sideTexture[0]), h, v, d, block));
 
-                                if (SouthIsOpen(block, GetBlockSouthRelative(cluster, southCluster, h, v, d)))
+                                if (DirectionIsOpen(block, GetBlockSouthRelative(cluster, southCluster, h, v, d), Directions.South))
                                     geometry.GetMesh(World.BlockTextureToTextureID(sideTexture[1])).Add(BuildSouthGeometry(World.BlockTextureToTextureOffset(sideTexture[1]), World.BlockTextureToTextureID(sideTexture[1]), h, v, d, block));
 
-                                if (EastIsOpen(block, GetBlockEastRelative(cluster, eastCluster, h, v, d)))
+                                if (DirectionIsOpen(block, GetBlockEastRelative(cluster, eastCluster, h, v, d), Directions.East))
                                     geometry.GetMesh(World.BlockTextureToTextureID(sideTexture[2])).Add(BuildEastGeometry(World.BlockTextureToTextureOffset(sideTexture[2]), World.BlockTextureToTextureID(sideTexture[2]),  h, v, d, block));
 
-                                if (WestIsOpen(block, GetBlockWestRelative(cluster, westCluster, h, v, d)))
+                                if (DirectionIsOpen(block, GetBlockWestRelative(cluster, westCluster, h, v, d), Directions.West))
                                     geometry.GetMesh(World.BlockTextureToTextureID(sideTexture[3])).Add(BuildWestGeometry(World.BlockTextureToTextureOffset(sideTexture[3]), World.BlockTextureToTextureID(sideTexture[3]), h, v, d, block));
                             }
                     });
