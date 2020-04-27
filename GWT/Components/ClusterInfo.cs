@@ -10,7 +10,7 @@ using GridWorld.Test.Geometry;
 
 namespace GridWorld.Test.Components
 {
-    public class ClusterInfo : LogicComponent
+    public class ClusterInfo : OriginCompensator
     {
         public Cluster TheCluster = null;
 
@@ -27,24 +27,13 @@ namespace GridWorld.Test.Components
         private bool UpdateOrigin = false;
         private Vector3 NewOrigin = Vector3.Zero;
 
-        public ClusterInfo (Cluster cluster)
+        public ClusterInfo (Cluster cluster) : base()
         {
             TheCluster = cluster;
             TheCluster.RenderTag = this;
             ReceiveSceneUpdates = true;
-
-            GeoLoadManager.OriginChanged += GeoLoadManager_OriginChanged;
-
+            WorldPos = TheCluster.Origin;
             TheCluster.ClusterGeoRefresh += TheCluster_ClusterGeoRefresh;
-        }
-
-
-        private void GeoLoadManager_OriginChanged(ClusterPos oldOrigin, ClusterPos newOrigin)
-        {
-            if (TheCluster == null)
-                return;
-
-            Node.SetWorldPosition(new Vector3((float)(TheCluster.Origin.H - newOrigin.H), 0, (float)(TheCluster.Origin.V - newOrigin.V)));
         }
 
         private void TheCluster_ClusterGeoRefresh(object sender, Cluster e)

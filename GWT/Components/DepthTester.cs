@@ -8,7 +8,7 @@ using Urho;
 
 namespace GridWorld.Test.Components
 {
-    public class DepthTester : LogicComponent
+    public class DepthTester : WorldSpaceObject
     {
         public Material NormalMaterial = null;
         public Material WarningMaterial = null;
@@ -19,7 +19,7 @@ namespace GridWorld.Test.Components
         public List<StaticModel> Models = new List<StaticModel>();
 
 
-        public DepthTester()
+        public DepthTester() : base()
         {
             ReceiveSceneUpdates = true;
         }

@@ -11,7 +11,7 @@ using Urho;
 
 namespace GridWorld.Test.Components
 {
-    class OriginCompensator : LogicComponent
+    public class OriginCompensator : LogicComponent
     {
         public ClusterPos WorldPos = null;
         public Vector3 Offset = Vector3.Zero;

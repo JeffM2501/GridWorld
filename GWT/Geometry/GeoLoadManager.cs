@@ -25,8 +25,8 @@ namespace GridWorld.Test.Geometry
             OriginChanged?.Invoke(oldOriign, CurrentOrigin);
         }
 
-        public static Int64 OriginLimit = 1024;
-        public static Int64 OriginSnap = 512;
+        public static Int64 OriginLimit = 256;
+        public static Int64 OriginSnap = 128;
 
         public static void CheckOrigin(Vector3 cameraPos)
         {

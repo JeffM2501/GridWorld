@@ -59,6 +59,7 @@
     <Compile Include="Components\OriginCompensator.cs" />
     <Compile Include="Components\PlayerAvatarController.cs" />
     <Compile Include="Components\Sun.cs" />
+    <Compile Include="Components\WorldSpaceObject.cs" />
     <Compile Include="GameApp.cs" />
     <Compile Include="Geometry\GeoLoadManager.cs" />
     <Compile Include="Geometry\LoadLimiter.cs" />

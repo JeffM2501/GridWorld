@@ -10,7 +10,7 @@ using GridWorld.Test.Geometry;
 
 namespace GridWorld.Test.Components
 {
-    public class PlayerAvatarController : LogicComponent
+    public class PlayerAvatarController : WorldSpaceObject
     {
         public Camera CameraNode = null;
 
@@ -20,21 +20,9 @@ namespace GridWorld.Test.Components
 
         public event EventHandler FlightStatusChanged = null;
 
-        public PlayerAvatarController()
+        public PlayerAvatarController() : base()
         {
             ReceiveSceneUpdates = true;
-            GeoLoadManager.OriginChanged += GeoLoadManager_OriginChanged;
-        }
-
-        private void GeoLoadManager_OriginChanged(ClusterPos oldOrigin, ClusterPos newOrigin)
-        {
-            float dh = newOrigin.H - oldOrigin.H;
-            float dv = newOrigin.V - oldOrigin.V;
-
-            float newPX = Node.Position.X - dh;
-            float newPZ = Node.Position.Z - dv;
-
-            Node.SetWorldPosition(new Vector3(newPX, Node.Position.Y, newPZ));
         }
 
         public override void OnAttachedToNode(Node node)
@@ -160,6 +148,8 @@ namespace GridWorld.Test.Components
                 }
                     
             }
+
+            UpdateWorldPos();
         }
     }
 }
