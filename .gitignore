@@ -337,3 +337,7 @@ ASALocalRun/
 /_bin_debug/OpenTK.xml
 /_bin_release/OpenTK.dll.config
 /_bin_release/OpenTK.xml
+*.exe
+*.config
+*.dll
+*.xml
