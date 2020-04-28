@@ -8,26 +8,24 @@ Copyright 2020 Jeffery Myers
 Codes is MIT.
 Assets are from https://www.kenney.nl/assets and PD
 
-#Language and Librarys
-
-Written in C#, using UrhoSharp https://docs.microsoft.com/en-us/xamarin/graphics-games/urhosharp/introduction
+# Language and Librarys
+Written in C#, using UrhoSharp https://docs.microsoft.com/en-us/xamarin/graphics-games/urhosharp/introduction. 
 
 ## Projects
 
-GridWorld is the main library that stores the voxel world.
-GWT Test harnes and dynamic loading/unloading code.
+* GridWorld is the main library that stores the voxel world.
+* GWT Test harnes and dynamic loading/unloading code.
 
 # Features
+* 64 bit voxel indexing giving a world space of just under 2000 square lightyears if 1 unit = 1 meter
+* Sliding origin to prevent floating point errors
+* Supports static worlds or procedural generation
+* 16 bit dynamic block type indexes
+* Multiple shapes including ramps
+* Background geometry loading/unloading
 
-64 bit voxel indexing giving a world space of just under 2000 square lightyears if 1 unit = 1 meter
-Sliding origin to prevent floating point errors
-Supports static worlds or procedural generation
-16 bit dynamic block type indexes
-Multiple shapes including ramps
-Background geometry loading/unloading
 
-
-#ToDO
+# ToDo
 * 3D Cluster indexes
 * Editing
 * Strucutres
