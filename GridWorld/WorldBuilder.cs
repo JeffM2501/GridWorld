@@ -394,8 +394,8 @@ namespace GridWorld
             {
                 InitStandardBlocks();
 
-                int HCount = 5;
-                int VCount = 5;
+                int HCount = 50;
+                int VCount = 50;
 
                 int hMin = 0;
                 if (HCount > 1)
