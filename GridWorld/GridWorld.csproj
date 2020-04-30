@@ -76,6 +76,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="WorldBuilder.cs" />
     <Compile Include="WorldManager.cs" />
+    <Compile Include="WorldManagers\FixedSizeMap.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />

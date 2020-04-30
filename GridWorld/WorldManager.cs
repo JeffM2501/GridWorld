@@ -18,6 +18,10 @@ namespace GridWorld
 
         protected List<ClusterPos> DesiredClusters = new List<ClusterPos>();
 
+
+        public delegate void ClusterEventHandler(Cluster cluster);
+        public event ClusterEventHandler ClusterLoaded = null;
+
         public virtual void Init(string cacheFolder)
         {
 
@@ -31,6 +35,16 @@ namespace GridWorld
         public virtual bool PreloadCluster(ClusterPos pos)
         {
             return false;
+        }
+
+        public virtual void LoadCluster(ClusterPos pos)
+        {
+
+        }
+
+        public virtual void DirtyCluster(Cluster cluster)
+        {
+
         }
     }
 }
