@@ -64,6 +64,8 @@ namespace GridWorld.Test
 
             Input.ExitRequested += Input_ExitRequested;
 
+            World.BindTexture = BindWorldTexture;
+
             SetupRenderer();
   
             SetupScene();
@@ -137,6 +139,17 @@ namespace GridWorld.Test
 
         bool GenerateTerrain = false;
 
+        private Material BindWorldTexture(string name)
+        {
+            Material mat = null;
+            if (System.IO.Path.GetExtension(name).ToUpperInvariant() == ".XML")
+                mat = ResourceCache.GetMaterial(name);
+            else
+                mat = Material.FromImage(name);
+
+            return mat;
+        }
+
         public void SetupScene()
         {
             this.Renderer.TextureFilterMode = TextureFilterMode.Nearest;
@@ -169,20 +182,6 @@ namespace GridWorld.Test
             float d = World.DropDepth(PlayerNode.Position.X, PlayerNode.Position.Z);
             if (d != float.MinValue)
                 PlayerNode.Position = new Vector3(PlayerNode.Position.X, d, PlayerNode.Position.Z);
-
-            foreach (var texture in World.Info.Textures)
-            {
-                if (texture.RuntimeMat == null)
-                {
-                    Material mat = null;
-                    if (System.IO.Path.GetExtension(texture.FileName).ToUpperInvariant() == ".XML")
-                        mat = ResourceCache.GetMaterial(texture.FileName);
-                    else
-                        mat = Material.FromImage(texture.FileName);
-
-                    texture.RuntimeMat = mat;
-                }
-            }
 
             foreach (var cluster in World.Clusters)
             {

@@ -38,17 +38,85 @@ using Urho;
 
 namespace GridWorld
 {
+    /// <summary>
+    /// runtime data for the active world. Stores all block defs, block indexes, and active clusters.
+    /// clusters may be loaded and unloaded by managers as needed
+    /// </summary>
     public static class World
-    { 
-        public static string WorldFileExtension = "world";
-        public static string ClusterFileExtension = "cluster";
-        public static string GeometryFileExtension = "Geom";
+    {
+        public delegate void IntEventCallback(int index);
+        public static event IntEventCallback BlockDefAdded = null;
+        public static event IntEventCallback BlockIndexAdded = null;
+        public static event IntEventCallback TextureAdded = null;
 
-        public static bool CompressFileIO = true;
+        public delegate void ClusterPosEventCallback(ClusterPos pos);
+        public static event ClusterPosEventCallback ClusterAdded = null;
+        public static event ClusterPosEventCallback ClusterDirty = null;
+        public static event ClusterPosEventCallback ClusterRemoved = null;
 
-        public static List<Block> BlockIndexCache = new List<Block>();
+        public delegate Material BindTextureCallback(string texture);
+        public static BindTextureCallback BindTexture = null;
 
         public const int EmptyBlockIndex = 0;
+
+        public class WorldInfo
+        {
+            public List<string> TextureNames = new List<string>();
+
+            public string Name = string.Empty;
+            public string Author = string.Empty;
+            public string Site = string.Empty;
+
+            public Vector3 SunPosition = new Vector3(200, 150, 100);
+            public float Ambient = 0.5f;
+            public float SunLuminance = 1.0f;
+        }
+        public static WorldInfo Info = new WorldInfo();
+
+        public static List<Material> TextureMaterials = new List<Material>();
+
+        public static List<BlockDef> BlockDefs = new List<BlockDef>();
+        public static List<Block> BlockIndexCache = new List<Block>();
+
+        public static Dictionary<ClusterPos, Cluster> Clusters = new Dictionary<ClusterPos, Cluster>();
+
+        public static int AddTexture(string name)
+        {
+            int index = Info.TextureNames.IndexOf(name);
+            if (index >= 0)
+                return index;
+
+            Info.TextureNames.Add(name);
+            int ret = Info.TextureNames.Count - 1;
+
+            TextureAdded?.Invoke(ret);
+            if (BindTexture != null)
+                TextureMaterials.Add(BindTexture(name));
+            else
+                TextureMaterials.Add(Urho.CoreAssets.Materials.DefaultGrey);
+
+            return ret;
+        }
+
+        public static void BindAllTextures()
+        {
+            TextureMaterials.Clear();
+            foreach (var name in Info.TextureNames)
+            {
+                if (BindTexture != null)
+                    TextureMaterials.Add(BindTexture(name));
+                else
+                    TextureMaterials.Add(Urho.CoreAssets.Materials.DefaultGrey);
+            }
+        }
+
+        public static int AddBlockDef(BlockDef def)
+        {
+            BlockDefs.Add(def);
+            int ret = BlockDefs.Count - 1;
+            BlockDefAdded?.Invoke(ret);
+            return ret;
+        }
 
         public static ushort AddBlock(Block blocInfo)
         {
@@ -65,7 +133,9 @@ namespace GridWorld
                     return (ushort)(index + 1);
 
                 BlockIndexCache.Add(blocInfo);
-                return (ushort)BlockIndexCache.Count();
+                ushort ret = (ushort)BlockIndexCache.Count();
+                BlockIndexAdded?.Invoke(ret);
+                return ret;
             }
         }
 
@@ -76,166 +146,6 @@ namespace GridWorld
 
             return BlockIndexCache[index - 1];
         }
-
-        public class TextureInfo
-        {
-            public override string ToString()
-            {
-                return FileName;
-            }
-
-            public string FileName = string.Empty;
-            public int HCount = 16;
-            public int VCount = 16;
-
-            public TextureInfo() { }
-
-            public TextureInfo(string name)
-            {
-                FileName = name;
-                HCount = 1;
-                VCount = 1;
-            }
-
-            public TextureInfo(string name, int h, int v)
-            {
-                FileName = name;
-                HCount = h;
-                VCount = v;
-            }
-
-            [XmlIgnore]
-            public int Start = -1;
-
-            [XmlIgnore]
-            public int End = -1;
-
-
-            [XmlIgnore]
-            public Urho.Material RuntimeMat = null;
-        }
-
-        public class WorldInfo
-        {
-            public List<TextureInfo> Textures = new List<TextureInfo>();
-            public string Name = string.Empty;
-            public string Author = string.Empty;
-            public string Site = string.Empty;
-
-            public Vector3 SunPosition = new Vector3(200, 150, 100);
-            public float Ambient = 0.5f;
-            public float SunLuminance = 1.0f;
-        }
-        public static WorldInfo Info = new WorldInfo();
-
-        private static Dictionary<Block.Geometries, Plane> CollisionPlanes = new Dictionary<Block.Geometries, Plane>();
-
-        public static void SetupTextureInfos()
-        {
-            int count = 0;
-            foreach (TextureInfo info in Info.Textures)
-            {
-                info.Start = count;
-                count += info.HCount * info.VCount;
-                info.End = count - 1;
-            }
-        }
-
-        private static void CheckTextureInfos()
-        {
-            if (Info.Textures.Count > 0 && Info.Textures[0].End == -1)
-                SetupTextureInfos();
-        }
-
-        public static int BlockTextureToTextureID(int blockTexture)
-        {
-            CheckTextureInfos();
-
-            for (int i = 0; i < Info.Textures.Count; i++)
-            {
-                if (blockTexture >= Info.Textures[i].Start && blockTexture <= Info.Textures[i].End)
-                    return i;
-            }
-
-            return -1;
-        }
-
-        public static int BlockTextureToTextureOffset(int blockTexture)
-        {
-            int texture = BlockTextureToTextureID(blockTexture);
-            if (texture < 0)
-                return -1;
-
-            return blockTexture - Info.Textures[texture].Start;
-        }
-
-        public class BlockDef
-        {
-            public string Name = string.Empty;
-
-            public override string ToString()
-            {
-                return Name;
-            }
-
-            // defines the textures used
-            public int Top = -1;
-            public int[] Sides = null;
-            public int Bottom = -1;
-
-            public bool Transperant = false;
-
-            public BlockDef() { }
-
-            public BlockDef(string name, int top)
-            {
-                Name = name;
-                Top = top;
-            }
-
-            public BlockDef(string name, int top, int sides)
-            {
-                Name = name;
-                Top = top;
-                Sides = new int[1];
-                Sides[0] = sides;
-            }
-
-            public BlockDef(string name, int top, int sides, int bottom)
-            {
-                Name = name;
-                Top = top;
-                Sides = new int[1];
-                Sides[0] = sides;
-                Bottom = bottom;
-            }
-
-            public BlockDef(string name, int top, int north, int south, int east, int west, int bottom)
-            {
-                Name = name;
-                Top = top;
-                Sides = new int[4];
-                Sides[0] = north;
-                Sides[1] = south;
-                Sides[2] = east;
-                Sides[3] = west;
-
-                Bottom = bottom;
-            }
-
-            public static int EmptyID = -1;
-        }
-
-        public static List<BlockDef> BlockDefs = new List<BlockDef>();
-
-        public static int AddBlockDef(BlockDef def)
-        {
-            BlockDefs.Add(def);
-            return BlockDefs.Count - 1;
-        }
-
-        public static Dictionary<ClusterPos, Cluster> Clusters = new Dictionary<ClusterPos, Cluster>();
-
 
         public static void Clear()
         {
@@ -365,19 +275,6 @@ namespace GridWorld
                 return float.MinValue;
 
             Cluster c = Clusters[pos];
-//             Int64 x = (Int64)positionH - pos.H;
-//             Int64 y = (Int64)positionV - pos.V;
-// 
-//             float blockH = positionH - pos.H;
-//             float blockV = positionV - pos.V;
-// 
-//             for (int d = Cluster.DSize - 1; d >= 0; d--)
-//             {
-//                 float value = c.GetBlockRelative(x, y, d).GetDForLocalPosition(blockH - x, blockV - y);
-//                 if (value != float.MinValue)
-//                     return d + value;
-//             }
-
             return c.DropDepth(positionH-pos.H,positionV - pos.V);
         }
     }

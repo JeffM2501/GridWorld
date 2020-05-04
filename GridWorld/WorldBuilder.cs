@@ -88,15 +88,15 @@ namespace GridWorld
                 Name = String.Empty;
             }
 
-            public static int Dirt = World.BlockDef.EmptyID;
-            public static int Stone = World.BlockDef.EmptyID;
-            public static int DeepStone = World.BlockDef.EmptyID;
-            public static int Grass = World.BlockDef.EmptyID;
-            public static int Water = World.BlockDef.EmptyID;
+            public static int Dirt = BlockDef.EmptyID;
+            public static int Stone = BlockDef.EmptyID;
+            public static int DeepStone = BlockDef.EmptyID;
+            public static int Grass = BlockDef.EmptyID;
+            public static int Water = BlockDef.EmptyID;
 
-            public static int Blue = World.BlockDef.EmptyID;
-            public static int Red = World.BlockDef.EmptyID;
-            public static int Tan = World.BlockDef.EmptyID;
+            public static int Blue = BlockDef.EmptyID;
+            public static int Red = BlockDef.EmptyID;
+            public static int Tan = BlockDef.EmptyID;
 
             private static ushort SolidStone = 0;
             private static ushort SolidDirt = 0;
@@ -127,28 +127,28 @@ namespace GridWorld
 
             public static void InitStandardBlocks()
             {
-                if (Dirt != World.BlockDef.EmptyID)
+                if (Dirt != BlockDef.EmptyID)
                     return;
 
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/dirt.png"));           //0
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/stone.png"));          //1
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/grass_top.png"));      //2
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/dirt_grass.png"));     //3
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/water_trans.xml"));    //4
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/cotton_blue.png"));    //5
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/cotton_red.png"));     //6
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/cotton_tan.png"));     //7
-                World.Info.Textures.Add(new World.TextureInfo("data/textures/greystone.png"));      //8
+                World.AddTexture(("data/textures/dirt.png"));           //0
+                World.AddTexture(("data/textures/stone.png"));          //1
+                World.AddTexture(("data/textures/grass_top.png"));      //2
+                World.AddTexture(("data/textures/dirt_grass.png"));     //3
+                World.AddTexture(("data/textures/water_trans.xml"));    //4
+                World.AddTexture(("data/textures/cotton_blue.png"));    //5
+                World.AddTexture(("data/textures/cotton_red.png"));     //6
+                World.AddTexture(("data/textures/cotton_tan.png"));     //7
+                World.AddTexture(("data/textures/greystone.png"));      //8
 
-                Dirt = World.AddBlockDef(new World.BlockDef("Dirt", 0));
-                Stone = World.AddBlockDef(new World.BlockDef("Stone", 1));
-                DeepStone = World.AddBlockDef(new World.BlockDef("DeepStone", 8));
-                Grass = World.AddBlockDef(new World.BlockDef("Grass", 2, 3, 0));
-                Water = World.AddBlockDef(new World.BlockDef("Water", 4));
+                Dirt = World.AddBlockDef(new BlockDef("Dirt", 0));
+                Stone = World.AddBlockDef(new BlockDef("Stone", 1));
+                DeepStone = World.AddBlockDef(new BlockDef("DeepStone", 8));
+                Grass = World.AddBlockDef(new BlockDef("Grass", 2, 3, 0));
+                Water = World.AddBlockDef(new BlockDef("Water", 4));
 
-                Blue = World.AddBlockDef(new World.BlockDef("Blue", 5));
-                Red = World.AddBlockDef(new World.BlockDef("Red", 6));
-                Tan = World.AddBlockDef(new World.BlockDef("Tan", 7));
+                Blue = World.AddBlockDef(new BlockDef("Blue", 5));
+                Red = World.AddBlockDef(new BlockDef("Red", 6));
+                Tan = World.AddBlockDef(new BlockDef("Tan", 7));
 
                 World.BlockDefs[Water].Transperant = true;
 

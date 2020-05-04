@@ -1209,10 +1209,10 @@ namespace GridWorld
 
                 cluster.DoForEachBlock((h, v, d, block)=>
                         {
-                            if (block.DefID < 0 || block.DefID >= World.BlockDefs.Count)
+                            if (block.DefID < 0 || block.DefID >= BlockDefs.Count)
                                 return;
 
-                            World.BlockDef def = World.BlockDefs[block.DefID];
+                            BlockDef def = BlockDefs[block.DefID];
 
                             int topTexture = def.Top;
                             int[] sideTexture = new int[4] { topTexture, topTexture, topTexture, topTexture };
@@ -1223,13 +1223,13 @@ namespace GridWorld
                             {
                                 for (int i = 0; i < 4; i++)
                                 {
-                                    if (def.Sides.Length > i && def.Sides[i] != World.BlockDef.EmptyID)
+                                    if (def.Sides.Length > i && def.Sides[i] != BlockDef.EmptyID)
                                         lastTexture = def.Sides[i];
                                     sideTexture[i] = lastTexture;
                                 }
                             }
                             int bottomTexture = topTexture;
-                            if (def.Bottom != World.BlockDef.EmptyID)
+                            if (def.Bottom != BlockDef.EmptyID)
                                 bottomTexture = def.Bottom;
 
                             if (block.Geom != Block.Geometries.Empty && block.Geom != Block.Geometries.Invisible)
@@ -1244,10 +1244,10 @@ namespace GridWorld
 //                                     blockWorldV += 1;
 
                                 // see what's around us
-                                if (topTexture != World.BlockDef.EmptyID && AboveIsOpen(block, cluster.GetBlockRelative(h, v, d + 1)))
+                                if (topTexture != BlockDef.EmptyID && AboveIsOpen(block, cluster.GetBlockRelative(h, v, d + 1)))
                                     geometry.GetMesh(World.BlockTextureToTextureID(topTexture)).Add(BuildAboveGeometry(World.BlockTextureToTextureOffset(topTexture), World.BlockTextureToTextureID(topTexture), h, v, d, block));
 
-                                if (d != 0 && bottomTexture != World.BlockDef.EmptyID && BellowIsOpen(block, cluster.GetBlockRelative( h, v, d - 1)))
+                                if (d != 0 && bottomTexture != BlockDef.EmptyID && BellowIsOpen(block, cluster.GetBlockRelative( h, v, d - 1)))
                                     geometry.GetMesh(World.BlockTextureToTextureID(bottomTexture)).Add(BuildBelowGeometry(World.BlockTextureToTextureOffset(bottomTexture), World.BlockTextureToTextureID(bottomTexture),  h, v, d, block));
 
                                 if (DirectionIsOpen(block, GetBlockNorthRelative(cluster, northCluster, h, v, d),Directions.North))

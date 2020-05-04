@@ -54,6 +54,9 @@
     <Reference Include="LibNoise, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\GWT\packages\CalmBit.LibNoise.1.0.0\lib\net40\LibNoise.dll</HintPath>
     </Reference>
+    <Reference Include="MsgPack, Version=1.0.0.0, Culture=neutral, PublicKeyToken=a2625990d5dc0167, processorArchitecture=MSIL">
+      <HintPath>..\GWT\packages\MsgPack.Cli.1.0.1\lib\net46\MsgPack.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -68,6 +71,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Block.cs" />
+    <Compile Include="BlockDef.cs" />
     <Compile Include="Cluster.cs" />
     <Compile Include="Cluster.Geometry.cs" />
     <Compile Include="ClusterPos.cs" />

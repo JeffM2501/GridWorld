@@ -36,6 +36,9 @@ using Urho;
 
 namespace GridWorld
 {
+    /// <summary>
+    /// A gird of blocks for a specific area in 3D space
+    /// </summary>
     public partial class Cluster : EventArgs,  IOctreeObject
     {
         public ushort[] _Blocks = null;
@@ -230,6 +233,7 @@ namespace GridWorld
             }
         }
 
+        [XmlIgnore]
         public float AliveCount = 0;
 
         [XmlIgnore]

@@ -47,6 +47,9 @@ namespace GridWorld
         SouthEast,
     }
 
+    /// <summary>
+    /// Defines a block shape combined with a block def, a unique block instance that can be stored as an index in a cluster.
+    /// </summary>
     public class Block : IEquatable<Block>
     {
         public enum Geometries
@@ -82,8 +85,8 @@ namespace GridWorld
 
         public object RenderTag = null;
 
-        public static Block Empty = new Block(World.BlockDef.EmptyID, Geometries.Empty);
-        public static Block Invalid = new Block(World.BlockDef.EmptyID, Geometries.Empty);
+        public static Block Empty = new Block(BlockDef.EmptyID, Geometries.Empty);
+        public static Block Invalid = new Block(BlockDef.EmptyID, Geometries.Empty);
 
         public Block() { }
 
